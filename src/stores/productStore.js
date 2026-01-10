@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { db } from '@/firebase' 
+import { db } from '../services/firebase' 
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore'
 
 export const useProductStore = defineStore('productStore', {
@@ -29,7 +29,6 @@ export const useProductStore = defineStore('productStore', {
     async addProduct(product) {
       try {
         const docRef = await addDoc(collection(db, "products"), product)
-        // Update local state so the UI updates immediately
         this.products.push({ id: docRef.id, ...product })
       } catch (error) {
         console.error("Error adding product:", error)
@@ -39,7 +38,6 @@ export const useProductStore = defineStore('productStore', {
     async updateProduct(productId, updatedProduct) {
       try {
         await updateDoc(doc(db, "products", productId), updatedProduct)
-        // Update local state so the UI updates immediately
         this.products = this.products.map(product => {
           if (product.id === productId) {
             return { ...product, ...updatedProduct }
@@ -54,7 +52,6 @@ export const useProductStore = defineStore('productStore', {
     async deleteProduct(productId) {
       try {
         await deleteDoc(doc(db, "products", productId))
-        // Update local state so the UI updates immediately
         this.products = this.products.filter(product => product.id !== productId)
       } catch (error) {
         console.error("Error deleting product:", error)

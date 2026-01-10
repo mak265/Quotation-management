@@ -40,27 +40,39 @@
               :rows="filteredProducts"
               :columns="columns"
               row-key="id"
-              :loading="loading"
+              :loading="productStore.loading"
               flat
               bordered
             >
+              <template v-slot:no-data="{ filter }">
+                <div class="full-width row flex-center q-gutter-sm q-pa-lg text-grey-8">
+                  <q-icon size="2em" :name="filter ? 'filter_list_off' : 'inventory_2'" />
+                  <span>
+                    {{ filter ? 'No matches found for your search' : 'No products found in inventory' }}
+                  </span>
+                  <q-btn
+                    v-if="!filter"
+                    flat
+                    color="primary"
+                    label="Add your first product"
+                    @click="showAddProductDialog = true"
+                  />
+                </div>
+              </template>
+
               <template v-slot:body-cell-actions="props">
                 <q-td :props="props">
                   <q-btn
-                    flat
-                    round
-                    dense
+                    flat round dense
                     icon="edit"
                     color="primary"
-                    @click="editProduct(props.row)"
+                    @click="openEditDialog(props.row)"
                   />
                   <q-btn
-                    flat
-                    round
-                    dense
+                    flat round dense
                     icon="delete"
                     color="negative"
-                    @click="deleteProduct(props.row)"
+                    @click="confirmDelete(props.row)"
                   />
                 </q-td>
               </template>
@@ -68,13 +80,7 @@
               <template v-slot:body-cell-stock="props">
                 <q-td :props="props">
                   <q-chip
-                    :color="
-                      props.row.stock < 10
-                        ? 'negative'
-                        : props.row.stock < 50
-                          ? 'warning'
-                          : 'positive'
-                    "
+                    :color="props.row.stock < 10 ? 'negative' : props.row.stock < 50 ? 'warning' : 'positive'"
                     text-color="white"
                     dense
                   >
@@ -88,7 +94,6 @@
       </div>
     </div>
 
-    <!-- Add/Edit Product Dialog -->
     <q-dialog v-model="showAddProductDialog" persistent>
       <q-card style="min-width: 400px">
         <q-card-section>
@@ -96,64 +101,26 @@
         </q-card-section>
 
         <q-card-section>
-          <q-form @submit="saveProduct">
-            <q-input
-              v-model="productForm.name"
-              label="Product Name"
-              outlined
-              dense
-              class="q-mb-md"
-              required
-            />
-            <q-input
-              v-model="productForm.sku"
-              label="SKU"
-              outlined
-              dense
-              class="q-mb-md"
-              required
-            />
-            <q-input
-              v-model.number="productForm.price"
-              label="Price"
-              type="number"
-              outlined
-              dense
-              class="q-mb-md"
-              required
-            />
-            <q-input
-              v-model.number="productForm.stock"
-              label="Stock Quantity"
-              type="number"
-              outlined
-              dense
-              class="q-mb-md"
-              required
-            />
-            <q-select
-              v-model="productForm.category"
-              :options="categories"
-              label="Category"
-              outlined
-              dense
-              class="q-mb-md"
-              required
-            />
-            <q-input
-              v-model="productForm.description"
-              label="Description"
-              type="textarea"
-              outlined
-              dense
-              class="q-mb-md"
-            />
+          <q-form @submit.prevent="handleSaveProduct" id="productForm">
+            <q-input v-model="productForm.name" label="Product Name" outlined dense class="q-mb-md" required />
+            <q-input v-model="productForm.sku" label="SKU" outlined dense class="q-mb-md" required />
+            <q-input v-model.number="productForm.price" label="Price" type="number" outlined dense class="q-mb-md" required />
+            <q-input v-model.number="productForm.stock" label="Stock Quantity" type="number" outlined dense class="q-mb-md" required />
+            <q-select v-model="productForm.category" :options="categories" label="Category" outlined dense class="q-mb-md" required />
+            <q-input v-model="productForm.description" label="Description" type="textarea" outlined dense class="q-mb-md" />
           </q-form>
         </q-card-section>
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="closeProductDialog" />
-          <q-btn flat label="Save" color="primary" @click="saveProduct" />
+          <q-btn 
+            flat 
+            label="Save" 
+            color="primary" 
+            type="submit" 
+            form="productForm"
+            :loading="productStore.loading" 
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -161,10 +128,14 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
+import { useProductStore } from '../../stores/productStore'
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
+const productStore = useProductStore()
 
 const searchQuery = ref('')
-const loading = ref(false)
 const showAddProductDialog = ref(false)
 const editingProduct = ref(null)
 
@@ -180,98 +151,80 @@ const productForm = reactive({
 const categories = ['Electronics', 'Clothing', 'Books', 'Home & Garden', 'Sports']
 
 const columns = [
-  { name: 'name', label: 'Product Name', field: 'name', align: 'left' },
-  { name: 'sku', label: 'SKU', field: 'sku', align: 'left' },
-  { name: 'category', label: 'Category', field: 'category', align: 'left' },
+  { name: 'name', label: 'Product Name', field: 'name', align: 'left', sortable: true },
+  { name: 'sku', label: 'SKU', field: 'sku', align: 'left', sortable: true },
+  { name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true },
   {
     name: 'price',
     label: 'Price',
     field: 'price',
     align: 'right',
-    format: (val) => `$${val.toFixed(2)}`,
+    sortable: true,
+    format: (val) => `$${Number(val).toFixed(2)}`,
   },
-  { name: 'stock', label: 'Stock', field: 'stock', align: 'center' },
+  { name: 'stock', label: 'Stock', field: 'stock', align: 'center', sortable: true },
   { name: 'actions', label: 'Actions', field: 'actions', align: 'center' },
 ]
 
-const products = ref([
-  {
-    id: 1,
-    name: 'Laptop Pro 15',
-    sku: 'LAP-001',
-    category: 'Electronics',
-    price: 1299.99,
-    stock: 25,
-    description: 'High-performance laptop',
-  },
-  {
-    id: 2,
-    name: 'Wireless Mouse',
-    sku: 'MOU-002',
-    category: 'Electronics',
-    price: 29.99,
-    stock: 150,
-    description: 'Ergonomic wireless mouse',
-  },
-  {
-    id: 3,
-    name: 'Cotton T-Shirt',
-    sku: 'TSH-003',
-    category: 'Clothing',
-    price: 19.99,
-    stock: 5,
-    description: 'Comfortable cotton t-shirt',
-  },
-  {
-    id: 4,
-    name: 'JavaScript Guide',
-    sku: 'BOK-004',
-    category: 'Books',
-    price: 39.99,
-    stock: 75,
-    description: 'Complete JavaScript programming guide',
-  },
-])
+onMounted(() => {
+  productStore.fetchProducts()
+})
 
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) return products.value
-  return products.value.filter(
+  const allProducts = productStore.products
+  if (!searchQuery.value) return allProducts
+  
+  const query = searchQuery.value.toLowerCase()
+  return allProducts.filter(
     (product) =>
-      product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.value.toLowerCase()),
+      product.name?.toLowerCase().includes(query) ||
+      product.sku?.toLowerCase().includes(query) ||
+      product.category?.toLowerCase().includes(query)
   )
 })
 
-const editProduct = (product) => {
+const openEditDialog = (product) => {
   editingProduct.value = product
   Object.assign(productForm, product)
   showAddProductDialog.value = true
 }
 
-const deleteProduct = (product) => {
-  if (confirm(`Are you sure you want to delete ${product.name}?`)) {
-    products.value = products.value.filter((p) => p.id !== product.id)
+const handleSaveProduct = async () => {
+  try {
+    if (editingProduct.value) {
+      await productStore.updateProduct(editingProduct.value.id, { ...productForm })
+      $q.notify({ color: 'positive', message: 'Product updated successfully', icon: 'check' })
+    } else {
+      await productStore.addProduct({ ...productForm })
+      $q.notify({ color: 'positive', message: 'Product added successfully', icon: 'add' })
+    }
+    closeProductDialog()
+  } catch {
+    // Fixed ESLint: Removed unused error variable
+    $q.notify({ color: 'negative', message: 'Error saving product', icon: 'report_problem' })
   }
 }
 
-const saveProduct = () => {
-  if (editingProduct.value) {
-    const index = products.value.findIndex((p) => p.id === editingProduct.value.id)
-    products.value[index] = { ...editingProduct.value, ...productForm }
-  } else {
-    const newProduct = {
-      id: Date.now(),
-      ...productForm,
+const confirmDelete = (product) => {
+  $q.dialog({
+    title: 'Delete Product',
+    message: `Are you sure you want to remove ${product.name}?`,
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    try {
+      await productStore.deleteProduct(product.id)
+      $q.notify({ color: 'positive', message: 'Product deleted', icon: 'delete' })
+    } catch {
+      $q.notify({ color: 'negative', message: 'Error deleting product' })
     }
-    products.value.push(newProduct)
-  }
-  closeProductDialog()
+  })
 }
 
 const closeProductDialog = () => {
   showAddProductDialog.value = false
   editingProduct.value = null
+  // Reset form
   Object.assign(productForm, {
     name: '',
     sku: '',
@@ -283,7 +236,6 @@ const closeProductDialog = () => {
 }
 
 const exportInventory = () => {
-  console.log('Exporting inventory data...')
-  // Add export functionality here
+  console.log('Exporting data:', productStore.products)
 }
 </script>
