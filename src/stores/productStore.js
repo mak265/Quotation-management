@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { db } from '../services/firebase' 
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
+import { Product } from '../services/models/Product' // <--- 1. Import the Model
 
 export const useProductStore = defineStore('productStore', {
   state: () => ({
@@ -13,10 +14,8 @@ export const useProductStore = defineStore('productStore', {
       this.loading = true
       try {
         const querySnapshot = await getDocs(collection(db, "products"))
-        this.products = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        // 2. Use the static factory method to create clean Product instances
+        this.products = querySnapshot.docs.map(doc => Product.fromFirestore(doc))
       } catch (error) {
         console.error("Error fetching products:", error)
       } finally {
@@ -24,26 +23,49 @@ export const useProductStore = defineStore('productStore', {
       }
     },
 
-    async addProduct(product) {
+    async addProduct(productData) {
       try {
-        const docRef = await addDoc(collection(db, "products"), product)
-        this.products.push({ id: docRef.id, ...product })
+        // 3. Create a new instance to sanitize data / defaults
+        const newProduct = new Product(productData)
+        
+        // 4. Send formatted data to Firestore
+        const docRef = await addDoc(collection(db, "products"), newProduct.toFirestore())
+        
+        // 5. Update local state with the ID and the clean instance
+        newProduct.id = docRef.id
+        this.products.push(newProduct)
       } catch (error) {
         console.error("Error adding product:", error)
+        throw error // Re-throw so the UI knows it failed
       }
     },
 
-    async updateProduct(productId, updatedProduct) {
+    async updateProduct(productId, partialData) {
       try {
-        await updateDoc(doc(db, "products", productId), updatedProduct)
-        this.products = this.products.map(product => {
-          if (product.id === productId) {
-            return { ...product, ...updatedProduct }
-          }
-          return product
-        })
+        // 6. Add an 'updatedAt' timestamp to the payload automatically
+        const updatePayload = {
+            ...partialData,
+            updatedAt: Timestamp.now()
+        }
+
+        await updateDoc(doc(db, "products", productId), updatePayload)
+
+        // 7. Update local state while keeping the item as a Class Instance
+        const index = this.products.findIndex(p => p.id === productId)
+        if (index !== -1) {
+            // Merge existing data with updates and recreate the Product instance
+            // This ensures the item in your array remains a valid Product object
+            const updatedInstance = new Product({ 
+                ...this.products[index], 
+                ...updatePayload,
+                // Convert Timestamp back to Date/null for the local UI instance immediately
+                updatedAt: updatePayload.updatedAt 
+            })
+            this.products[index] = updatedInstance
+        }
       } catch (error) {
         console.error("Error updating product:", error)
+        throw error
       }
     },
 
