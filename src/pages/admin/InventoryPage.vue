@@ -13,13 +13,33 @@
           <q-card-section>
             <div class="row q-col-gutter-md q-mb-md">
               <div class="col-12 col-md-4">
-                <q-input v-model="searchQuery" outlined dense placeholder="Search products...">
+                <q-input v-model="searchQuery" outlined dense placeholder="Search">
                   <template v-slot:prepend>
                     <q-icon name="search" />
                   </template>
                 </q-input>
               </div>
-              <div class="col-12 col-md-8">
+              <div class="col-12 col-md-4">
+                <q-select
+                  v-model="selectedCategory"
+                  :options="categoryOptions"
+                  outlined
+                  dense
+                  label="Category"
+                  emit-value
+                />
+              </div>
+              <div class="col-12 col-md-4">
+                <q-select
+                  v-model="selectedStock"
+                  :options="stockOptions"
+                  outlined
+                  dense
+                  label="Stock"
+                  emit-value
+                />
+              </div>
+              <div class="col-12">
                 <q-btn
                   color="primary"
                   icon="add"
@@ -113,13 +133,13 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="closeProductDialog" />
-          <q-btn 
-            flat 
-            label="Save" 
-            color="primary" 
-            type="submit" 
+          <q-btn
+            flat
+            label="Save"
+            color="primary"
+            type="submit"
             form="productForm"
-            :loading="productStore.loading" 
+            :loading="productStore.loading"
           />
         </q-card-actions>
       </q-card>
@@ -136,6 +156,8 @@ const $q = useQuasar()
 const productStore = useProductStore()
 
 const searchQuery = ref('')
+const selectedCategory = ref('All')
+const selectedStock = ref('All')
 const showAddProductDialog = ref(false)
 const editingProduct = ref(null)
 
@@ -170,17 +192,37 @@ onMounted(() => {
   productStore.fetchProducts()
 })
 
+const categoryOptions = computed(() => {
+  const found = Array.from(new Set((productStore.products || []).map(p => p.category).filter(Boolean))).sort()
+  return ['All', ...found]
+})
+
+const stockOptions = ['All', 'Out of Stock', 'Low', 'Medium', 'High']
+
 const filteredProducts = computed(() => {
-  const allProducts = productStore.products
-  if (!searchQuery.value) return allProducts
-  
-  const query = searchQuery.value.toLowerCase()
-  return allProducts.filter(
-    (product) =>
-      product.name?.toLowerCase().includes(query) ||
-      product.sku?.toLowerCase().includes(query) ||
-      product.category?.toLowerCase().includes(query)
-  )
+  let items = productStore.products || []
+  if (selectedCategory.value !== 'All') {
+    items = items.filter(p => p.category === selectedCategory.value)
+  }
+  if (selectedStock.value !== 'All') {
+    items = items.filter(p => {
+      const s = Number(p.stock) || 0
+      if (selectedStock.value === 'Out of Stock') return s === 0
+      if (selectedStock.value === 'Low') return s > 0 && s < 10
+      if (selectedStock.value === 'Medium') return s >= 10 && s < 50
+      if (selectedStock.value === 'High') return s >= 50
+      return true
+    })
+  }
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    items = items.filter(p =>
+      p.name?.toLowerCase().includes(q) ||
+      p.sku?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q)
+    )
+  }
+  return items
 })
 
 const openEditDialog = (product) => {

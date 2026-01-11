@@ -38,6 +38,18 @@ const routes = [
           caption: 'Process customer orders',
         },
       },
+      {
+        path: '/transactions',
+        name: 'Transactions',
+        component: () => import('pages/admin/TransactionsPage.vue'),
+        meta: {
+          isSidebarItem: true,
+          isManagement: true,
+          label: 'Transactions',
+          icon: 'receipt_long',
+          caption: 'Transaction history',
+        },
+      },
     ],
   },
 
