@@ -39,6 +39,7 @@
                   </q-item>
                 </q-list>
               </q-btn-dropdown>
+              <q-btn class="btn-secondary" icon="logout" label="Logout" no-caps @click="logout" />
             </div>
           </q-card-section>
         </q-card>
@@ -538,6 +539,9 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { signOut } from 'firebase/auth'
+import { auth } from '../../services/firebase'
 import { useOrderStore } from '../../stores/orderStore'
 import { useProductStore } from '../../stores/productStore'
 
@@ -803,6 +807,14 @@ const executeExportCSV = () => {
 
 const downloadInventoryReport = () => {}
 
+const router = useRouter()
+const logout = async () => {
+  try {
+    await signOut(auth)
+  } finally {
+    router.push('/login')
+  }
+}
 // Watch for chart type changes
 watch(chartType, (newType) => {
   if (newType === 'line' || newType === 'area') {
