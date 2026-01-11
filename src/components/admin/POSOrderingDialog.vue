@@ -7,15 +7,30 @@
     transition-hide="slide-down"
   >
     <q-layout view="hHh lpR fFf" container class="bg-grey-2">
-      <q-header class="bg-white text-primary bordered-bottom shadow-1">
+      <q-header class="bg-gradient-primary text-white shadow-2">
         <q-toolbar>
-          <q-btn flat round dense icon="close" v-close-popup color="grey-8" />
-          <q-toolbar-title class="text-weight-bold text-grey-9">
-            <q-icon name="point_of_sale" color="primary" size="28px" class="q-mr-sm" />
-            POS Terminal
+          <q-btn flat round dense icon="close" v-close-popup size="sm" />
+          <q-toolbar-title class="text-weight-bold row items-center">
+            <q-icon name="point_of_sale" size="32px" class="q-mr-sm" />
+            <div>
+              <div>POS Terminal</div>
+              <div class="text-caption text-blue-1">V.2.0 • Premium Edition</div>
+            </div>
           </q-toolbar-title>
-          <div class="text-subtitle1 text-grey-8 q-mr-md">
-            {{ currentDate }}
+          
+          <div class="row items-center q-gutter-x-lg">
+            <div class="text-center">
+              <div class="text-caption text-blue-1">Current Session</div>
+              <div class="text-subtitle1">{{ currentDate }}</div>
+            </div>
+            <q-separator vertical dark />
+            <div class="text-center">
+              <div class="text-caption text-blue-1">Operator</div>
+              <div class="text-subtitle1">Admin</div>
+            </div>
+            <q-btn round flat icon="notifications" size="sm">
+              <q-badge color="red" floating rounded>3</q-badge>
+            </q-btn>
           </div>
         </q-toolbar>
       </q-header>
@@ -23,185 +38,99 @@
       <q-page-container>
         <q-page class="row no-wrap fit">
           
+          <!-- Left Column - Products -->
           <div class="col-8 column q-pa-md">
-            <div class="row q-col-gutter-sm q-mb-md">
-              <div class="col-12 col-md-8">
-                <q-tabs
-                  v-model="selectedCategory"
-                  active-color="primary"
-                  indicator-color="primary"
-                  align="left"
-                  dense
-                  class="text-grey-7 bg-white rounded-borders shadow-1"
-                >
-                  <q-tab name="All" label="All Items" />
-                  <q-tab name="Electronics" label="Electronics" />
-                  <q-tab name="Clothing" label="Clothing" />
-                  <q-tab name="Books" label="Books" />
-                </q-tabs>
+            <!-- Top Controls -->
+            <div class="row q-col-gutter-md q-mb-md">
+              <div class="col-12 col-md-6">
+                <div class="bg-white rounded-borders shadow-1 q-pa-sm">
+                  <q-tabs
+                    v-model="selectedCategory"
+                    active-color="primary"
+                    indicator-color="primary"
+                    align="justify"
+                    dense
+                    class="text-grey-7"
+                  >
+                    <q-tab v-for="cat in categories" :key="cat" :name="cat" :label="cat" />
+                  </q-tabs>
+                </div>
               </div>
-              <div class="col-12 col-md-4">
-                <q-input
-                  v-model="search"
-                  outlined
-                  dense
-                  placeholder="Search products..."
-                  bg-color="white"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="search" />
-                  </template>
-                </q-input>
+              
+              <div class="col-12 col-md-6">
+                <div class="row q-col-gutter-sm">
+                  <div class="col-8">
+                    <q-input
+                      v-model="search"
+                      outlined
+                      dense
+                      placeholder="Search products..."
+                      bg-color="white"
+                      class="shadow-1"
+                    >
+                      <template v-slot:prepend>
+                        <q-icon name="search" color="primary" />
+                      </template>
+                      <template v-slot:append v-if="search">
+                        <q-icon name="close" class="cursor-pointer" @click="search = ''" />
+                      </template>
+                    </q-input>
+                  </div>
+                  <div class="col-4">
+                    <q-select
+                      v-model="sortBy"
+                      :options="sortOptions"
+                      outlined
+                      dense
+                      bg-color="white"
+                      class="shadow-1"
+                      label="Sort by"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <q-scroll-area class="col">
+            <!-- Products Grid -->
+            <q-scroll-area class="col q-pr-sm">
               <div class="row q-col-gutter-md">
                 <div
-                  v-for="product in filteredProducts"
+                  v-for="product in sortedProducts"
                   :key="product.id"
-                  class="col-12 col-sm-6 col-md-4 col-lg-3"
+                  class="col-12 col-sm-6 col-md-4 col-xl-3"
                 >
-                  <q-card
-                    class="cursor-pointer full-height hover-effect no-border"
-                    @click="addToCart(product)"
-                    v-ripple
-                  >
-                    <q-img :src="product.image" :ratio="4 / 3">
-                      <div class="absolute-bottom text-subtitle2 text-center text-weight-bold">
-                        ${{ product.price }}
-                      </div>
-                    </q-img>
-                    <q-card-section>
-                      <div class="text-weight-bold ellipsis text-grey-9">{{ product.name }}</div>
-                      <div class="text-caption text-grey-6">{{ product.category }}</div>
-                    </q-card-section>
-                  </q-card>
+                  <product-card :product="product" @add-to-cart="addToCart" />
                 </div>
               </div>
             </q-scroll-area>
           </div>
 
-          <div class="col-4 bg-white column shadow-3 relative-position">
+          <!-- Right Column - Cart & Checkout -->
+          <div class="col-4 bg-white column shadow-3-left">
             
-            <div class="q-pa-md bg-grey-1 bordered-bottom">
-              <div class="text-h6 q-mb-sm text-grey-8">Order Details</div>
-              <q-input
-                v-model="customer.name"
-                label="Customer Name"
-                outlined
-                dense
-                class="q-mb-xs bg-white"
-                :rules="[val => !!val || 'Required']"
-                hide-bottom-space
-              />
-              <q-input
-                v-model="customer.email"
-                label="Email (Optional)"
-                outlined
-                dense
-                class="bg-white q-mt-sm"
-              />
-            </div>
-
+            <!-- Customer Info -->
+            <customer-details v-model="customer" class="q-pa-md" />
+            
             <q-separator />
 
-            <q-scroll-area class="col q-px-sm">
-              <q-list separator class="q-py-md">
-                <q-item v-if="cart.length === 0" class="text-grey text-center q-pa-xl column flex-center">
-                  <q-icon name="shopping_cart_checkout" size="4em" color="grey-4" />
-                  <div class="q-mt-sm text-h6 text-grey-5">Cart is empty</div>
-                  <div class="text-caption">Select items from the left to start</div>
-                </q-item>
+            <!-- Cart Items -->
+            <cart-items 
+              :items="cart" 
+              @update-quantity="updateQuantity"
+              @remove-item="removeItem"
+            />
 
-                <transition-group name="list">
-                  <q-item v-for="(item, index) in cart" :key="item.product.id">
-                    <q-item-section avatar>
-                      <q-avatar rounded size="50px">
-                        <img :src="item.product.image" />
-                      </q-avatar>
-                    </q-item-section>
-
-                    <q-item-section>
-                      <q-item-label class="text-weight-bold">{{ item.product.name }}</q-item-label>
-                      <q-item-label caption>
-                        ${{ item.product.price }} / unit
-                      </q-item-label>
-                    </q-item-section>
-
-                    <q-item-section side>
-                      <div class="row items-center bg-grey-2 rounded-borders">
-                        <q-btn
-                          round flat dense size="sm"
-                          icon="remove"
-                          color="grey-7"
-                          @click.stop="updateQuantity(index, -1)"
-                        />
-                        <span class="text-body1 q-mx-sm text-weight-bold" style="min-width: 20px; text-align: center">
-                          {{ item.quantity }}
-                        </span>
-                        <q-btn
-                          round flat dense size="sm"
-                          icon="add"
-                          color="primary"
-                          @click.stop="updateQuantity(index, 1)"
-                        />
-                      </div>
-                      <div class="text-subtitle2 text-primary q-mt-xs text-right text-weight-bold">
-                        ${{ (item.product.price * item.quantity).toFixed(2) }}
-                      </div>
-                    </q-item-section>
-                  </q-item>
-                </transition-group>
-              </q-list>
-            </q-scroll-area>
-
-            <div class="q-pa-md bg-white bordered-top shadow-up-2">
-              <div class="row justify-between q-mb-xs">
-                <span class="text-grey-8">Subtotal</span>
-                <span class="text-weight-bold">${{ totalAmount.toFixed(2) }}</span>
-              </div>
-              <div class="row justify-between q-mb-md">
-                <span class="text-grey-8">Tax (0%)</span>
-                <span>$0.00</span>
-              </div>
-
-              <q-separator class="q-mb-md" />
-
-              <div class="row justify-between items-center q-mb-lg">
-                <span class="text-h5 text-weight-bold">Total</span>
-                <span class="text-h4 text-primary text-weight-bolder">
-                  ${{ totalAmount.toFixed(2) }}
-                </span>
-              </div>
-
-              <div class="row q-col-gutter-md">
-                <div class="col-5">
-                  <q-btn
-                    outline
-                    color="grey-8"
-                    label="Clear"
-                    class="full-width"
-                    @click="clearCart"
-                    :disable="orderStore.loading"
-                  />
-                </div>
-                <div class="col-7">
-                  <q-btn
-                    unelevated
-                    color="primary"
-                    class="full-width"
-                    size="lg"
-                    @click="submitOrder"
-                    :loading="orderStore.loading"
-                    :disable="cart.length === 0 || !customer.name"
-                  >
-                    <div>Pay & Save</div>
-                    <q-icon name="arrow_forward" class="q-ml-sm" size="xs" />
-                  </q-btn>
-                </div>
-              </div>
-            </div>
+            <!-- Checkout Summary -->
+            <checkout-summary
+              :subtotal="subtotal"
+              :tax-rate="taxRate"
+              :discount-rate="discountRate"
+              :cart-length="cart.length"
+              :customer-name="customer.name"
+              @clear-cart="clearCart"
+              @pay-now="submitOrder"
+              @save-draft="saveAsDraft"
+            />
           </div>
         </q-page>
       </q-page-container>
@@ -210,103 +139,226 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { date, useQuasar } from 'quasar'
-import { useOrderStore } from 'src/stores/orderStore' // Ensure this path matches your project structure
+import { useOrderStore } from 'src/stores/orderStore'
+import ProductCard from 'src/components/admin/ProductCard.vue'
+import CustomerDetails from 'src/components/admin/CustomerDetails.vue'
+import CartItems from 'src/components/admin/CartItems.vue'
+import CheckoutSummary from 'src/components/admin/CheckoutSummary.vue'
 
-// 1. Initialize Store & Quasar
-const orderStore = useOrderStore()
+// Initialize
 const $q = useQuasar()
+const orderStore = useOrderStore()
 
-const props = defineProps({
+// Props & Emits
+defineProps({
   modelValue: Boolean,
-  products: {
-    type: Array,
-    default: () => [],
-  },
 })
-
 const emit = defineEmits(['update:modelValue', 'create'])
 
 // State
 const search = ref('')
 const selectedCategory = ref('All')
+const sortBy = ref('name')
 const cart = ref([])
-const customer = reactive({ name: '', email: '' })
-const currentDate = date.formatDate(Date.now(), 'DD MMM YYYY • HH:mm')
-
-// Mock Data Enhancement
-const enhancedProducts = computed(() => {
-  return props.products.map((p, i) => ({
-    ...p,
-    image: p.image || `https://picsum.photos/seed/${p.id}/300/200`,
-    category: p.category || ['Electronics', 'Clothing', 'Books'][i % 3],
-  }))
+const customer = reactive({ 
+  name: '', 
+  email: '',
+  phone: '' 
 })
 
-// Filtering Logic
+// Constants
+const taxRate = 0.08
+const discountRate = 0.05
+const categories = ['All', 'Hot Coffee', 'Iced Coffee', 'Pastries', 'Beans', 'Merchandise']
+
+const sortOptions = [
+  { label: 'Name A-Z', value: 'name' },
+  { label: 'Price Low-High', value: 'price-asc' },
+  { label: 'Price High-Low', value: 'price-desc' },
+  { label: 'Category', value: 'category' }
+]
+
+// Products data
+const products = ref([
+  {
+    id: 1,
+    sku: 'COF-001',
+    name: 'Espresso',
+    description: 'Rich, concentrated coffee served in a small cup.',
+    category: 'Hot Coffee',
+    price: 3.50,
+    originalPrice: null,
+    image: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400',
+    stock: 100,
+  },
+  {
+    id: 2,
+    sku: 'COF-002',
+    name: 'Cappuccino',
+    description: 'Espresso with steamed milk and a thick layer of foam.',
+    category: 'Hot Coffee',
+    price: 4.50,
+    originalPrice: 5.00,
+    image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400',
+    stock: 85,
+  },
+  
+ 
+  
+ 
+  {
+    id: 7,
+    sku: 'PAS-002',
+    name: 'Chocolate Muffin',
+    description: 'Rich chocolate muffin with chocolate chips.',
+    category: 'Pastries',
+    price: 3.75,
+    originalPrice: 4.25,
+    image: 'https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=400',
+    stock: 18,
+  },
+  {
+    id: 8,
+    sku: 'BEA-001',
+    name: 'Signature Blend Beans',
+    description: 'Our house signature blend, medium roast.',
+    category: 'Beans',
+    price: 15.00,
+    originalPrice: 18.00,
+    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400',
+    stock: 30,
+  },
+  {
+    id: 9,
+    sku: 'MER-001',
+    name: 'Ceramic Mug',
+    description: 'Classic white ceramic mug with our logo.',
+    category: 'Merchandise',
+    price: 12.50,
+    originalPrice: null,
+    image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400',
+    stock: 50,
+  },
+])
+
+// Computed
+const currentDate = computed(() => {
+  return date.formatDate(Date.now(), 'ddd, DD MMM YYYY • hh:mm A')
+})
+
 const filteredProducts = computed(() => {
-  let list = enhancedProducts.value
+  let list = products.value
 
   if (selectedCategory.value !== 'All') {
-    list = list.filter((p) => p.category === selectedCategory.value)
+    list = list.filter(p => p.category === selectedCategory.value)
   }
 
   if (search.value) {
     const q = search.value.toLowerCase()
-    list = list.filter((p) => p.name.toLowerCase().includes(q))
+    list = list.filter(p => 
+      p.name.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q)
+    )
   }
   return list
 })
 
-const totalAmount = computed(() => {
+const sortedProducts = computed(() => {
+  const list = [...filteredProducts.value]
+  switch(sortBy.value) {
+    case 'price-asc': return list.sort((a, b) => a.price - b.price)
+    case 'price-desc': return list.sort((a, b) => b.price - a.price)
+    case 'category': return list.sort((a, b) => a.category.localeCompare(b.category))
+    default: return list.sort((a, b) => a.name.localeCompare(b.name))
+  }
+})
+
+const subtotal = computed(() => {
   return cart.value.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
 })
 
-// Actions
+// Methods
 const addToCart = (product) => {
-  const existing = cart.value.find((item) => item.product.id === product.id)
+  const existing = cart.value.find(item => item.product.id === product.id)
   if (existing) {
     existing.quantity++
   } else {
-    cart.value.push({
-      product: product,
-      quantity: 1,
-    })
+    cart.value.push({ product: { ...product }, quantity: 1 })
   }
+  
+  $q.notify({
+    message: `${product.name} added`,
+    color: 'positive',
+    icon: 'add_shopping_cart',
+    position: 'top-right',
+    timeout: 1000
+  })
 }
 
 const updateQuantity = (index, delta) => {
   const item = cart.value[index]
-  const newQty = item.quantity + delta
-
-  if (newQty <= 0) {
+  item.quantity += delta
+  
+  if (item.quantity <= 0) {
     cart.value.splice(index, 1)
-  } else {
-    item.quantity = newQty
   }
 }
 
+const removeItem = (index) => {
+  cart.value.splice(index, 1)
+}
+
 const clearCart = () => {
-  cart.value = []
-  customer.name = ''
-  customer.email = ''
+  $q.dialog({
+    title: 'Clear Cart',
+    message: 'Clear all items?',
+    cancel: true,
+  }).onOk(() => {
+    cart.value = []
+    customer.name = ''
+    customer.email = ''
+    customer.phone = ''
+  })
+}
+
+const saveAsDraft = () => {
+  $q.notify({
+    message: 'Order saved as draft',
+    color: 'info',
+    icon: 'save',
+    position: 'top-right'
+  })
 }
 
 const submitOrder = async () => {
-  // Prepare payload for Firestore
+  if (!customer.name) {
+    $q.notify({
+      type: 'warning',
+      message: 'Please enter customer name',
+      icon: 'warning'
+    })
+    return
+  }
+
+  const taxAmount = subtotal.value * taxRate
+  const discountAmount = subtotal.value * discountRate
+  const totalAmount = subtotal.value + taxAmount - discountAmount
+
   const orderData = {
-    customerName: customer.name,
-    customerEmail: customer.email,
+    customer,
     status: 'Paid',
-    totalAmount: totalAmount.value,
-    items: cart.value.map((item) => ({
-      productId: item.product.id,
-      name: item.product.name,
-      price: item.product.price,
-      quantity: item.quantity,
-      image: item.product.image
+    subtotal: subtotal.value,
+    taxAmount,
+    discountAmount,
+    totalAmount,
+    items: cart.value.map(item => ({
+      ...item.product,
+      quantity: item.quantity
     })),
+    orderNumber: `ORD-${Date.now().toString().slice(-6)}`
   }
 
   try {
@@ -314,50 +366,37 @@ const submitOrder = async () => {
 
     $q.notify({
       type: 'positive',
-      message: 'Order placed successfully!',
-      icon: 'check_circle'
+      message: `Order #${orderData.orderNumber} placed!`,
+      caption: `Total: $${totalAmount.toFixed(2)}`,
+      icon: 'check_circle',
+      position: 'top-right',
+      timeout: 3000
     })
 
     clearCart()
     emit('update:modelValue', false)
 
   } catch (error) {
-    // FIX: Log the error so the variable is "used"
-    console.error('POS Submission Error:', error) 
-
+    console.error('POS Error:', error)
     $q.notify({
       type: 'negative',
-      message: 'Failed to place order. Please try again.',
+      message: 'Failed to place order',
       icon: 'error'
     })
   }
 }
+
+onMounted(() => {
+  // Initialization if needed
+})
 </script>
 
 <style scoped>
-.hover-effect {
-  transition: all 0.2s ease;
-}
-.hover-effect:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
 }
 
-.bordered-bottom {
-  border-bottom: 1px solid #e0e0e0;
-}
-.bordered-top {
-  border-top: 1px solid #e0e0e0;
-}
-
-/* Animations */
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s ease;
-}
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
+.shadow-3-left {
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
 }
 </style>
