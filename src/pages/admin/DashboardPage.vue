@@ -4,10 +4,10 @@
     <div class="row q-col-gutter-md">
       <!-- Header -->
       <div class="col-12">
-        <q-card class="glass-card">
-          <q-card-section class="row items-center justify-between">
+        <q-card class="glass-card chart-card">
+          <q-card-section class="row items-center justify-between dashboard-hero">
             <div>
-              <div class="text-h5">Coffee Shop Dashboard</div>
+              <div class="text-h5 gradient-text">Coffee Shop Dashboard</div>
               <div class="text-subtitle2 text-grey-7">
                 Good {{ timeGreeting }}, Admin! Here's your business overview
               </div>
@@ -50,7 +50,7 @@
           <q-card-section>
             <div class="row items-center">
               <div class="col">
-                <div class="text-h4">{{ formatCurrency(todaySales) }}</div>
+                <div class="text-h4 metric-value">{{ formatCurrency(todaySales) }}</div>
                 <div class="text-subtitle2">Today's Sales</div>
               </div>
               <div class="col-auto"><q-icon name="attach_money" size="48px" /></div>
@@ -73,7 +73,7 @@
           <q-card-section>
             <div class="row items-center">
               <div class="col">
-                <div class="text-h4">{{ todayOrders }}</div>
+                <div class="text-h4 metric-value">{{ todayOrders }}</div>
                 <div class="text-subtitle2">Orders Today</div>
               </div>
               <div class="col-auto"><q-icon name="shopping_cart" size="48px" /></div>
@@ -96,7 +96,7 @@
           <q-card-section>
             <div class="row items-center">
               <div class="col">
-                <div class="text-h4">{{ lowStockItems }}</div>
+                <div class="text-h4 metric-value">{{ lowStockItems }}</div>
                 <div class="text-subtitle2">Low Stock Items</div>
               </div>
               <div class="col-auto"><q-icon name="warning" size="48px" /></div>
@@ -113,7 +113,7 @@
           <q-card-section>
             <div class="row items-center">
               <div class="col">
-                <div class="text-h4">{{ activeTables }}</div>
+                <div class="text-h4 metric-value">{{ activeTables }}</div>
                 <div class="text-subtitle2">Active Tables</div>
               </div>
               <div class="col-auto"><q-icon name="table_restaurant" size="48px" /></div>
@@ -128,7 +128,7 @@
       <!-- Main Content Area -->
       <div class="col-12 col-md-8">
         <!-- Enhanced Daily Sales Overview with Graph -->
-        <q-card class="q-mb-md glass-card">
+        <q-card class="q-mb-md glass-card chart-card">
           <q-card-section>
             <div class="row items-center justify-between">
               <div>
@@ -185,25 +185,25 @@
             <div class="row q-col-gutter-md q-mb-lg">
               <div class="col-6 col-md-3">
                 <div class="text-center">
-                  <div class="text-h6 text-primary">{{ formatCurrency(periodStats.totalSales) }}</div>
+                  <div class="text-h6 gradient-text">{{ formatCurrency(periodStats.totalSales) }}</div>
                   <div class="text-caption text-grey-7">Total Sales</div>
                 </div>
               </div>
               <div class="col-6 col-md-3">
                 <div class="text-center">
-                  <div class="text-h6 text-positive">{{ periodStats.totalOrders }}</div>
+                  <div class="text-h6 gradient-text">{{ periodStats.totalOrders }}</div>
                   <div class="text-caption text-grey-7">Total Orders</div>
                 </div>
               </div>
               <div class="col-6 col-md-3">
                 <div class="text-center">
-                  <div class="text-h6 text-warning">{{ formatCurrency(periodStats.avgOrderValue) }}</div>
+                  <div class="text-h6 gradient-text">{{ formatCurrency(periodStats.avgOrderValue) }}</div>
                   <div class="text-caption text-grey-7">Avg Order Value</div>
                 </div>
               </div>
               <div class="col-6 col-md-3">
                 <div class="text-center">
-                  <div class="text-h6" :class="periodStats.growth >= 0 ? 'text-positive' : 'text-negative'">
+                  <div class="text-h6 gradient-text">
                     {{ periodStats.growth >= 0 ? '+' : '' }}{{ periodStats.growth }}%
                   </div>
                   <div class="text-caption text-grey-7">Growth</div>
