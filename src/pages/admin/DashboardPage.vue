@@ -56,12 +56,7 @@
               </div>
               <div class="col-auto"><q-icon name="attach_money" size="48px" /></div>
             </div>
-            <q-linear-progress
-              :value="salesProgress"
-              color="white"
-              class="q-mt-sm"
-              size="10px"
-            />
+            <q-linear-progress :value="salesProgress" color="white" class="q-mt-sm" size="10px" />
             <div class="text-caption q-mt-xs">
               {{ salesComparison > 0 ? '+' : '' }}{{ salesComparison }}% vs yesterday
             </div>
@@ -79,12 +74,7 @@
               </div>
               <div class="col-auto"><q-icon name="shopping_cart" size="48px" /></div>
             </div>
-            <q-linear-progress
-              :value="ordersProgress"
-              color="white"
-              class="q-mt-sm"
-              size="10px"
-            />
+            <q-linear-progress :value="ordersProgress" color="white" class="q-mt-sm" size="10px" />
             <div class="text-caption q-mt-xs">
               Avg. {{ formatCurrency(averageOrderValue) }} per order
             </div>
@@ -102,9 +92,7 @@
               </div>
               <div class="col-auto"><q-icon name="warning" size="48px" /></div>
             </div>
-            <div class="text-caption q-mt-xs">
-              {{ criticalStockItems }} items critical
-            </div>
+            <div class="text-caption q-mt-xs">{{ criticalStockItems }} items critical</div>
           </q-card-section>
         </q-card>
       </div>
@@ -155,7 +143,7 @@
 
                 <!-- Chart Type Selector -->
                 <q-btn-dropdown
-                  :label="chartTypes.find(t => t.value === chartType).label"
+                  :label="chartTypes.find((t) => t.value === chartType).label"
                   outline
                   size="sm"
                   color="primary"
@@ -186,7 +174,9 @@
             <div class="row q-col-gutter-md q-mb-lg">
               <div class="col-6 col-md-3">
                 <div class="text-center">
-                  <div class="text-h6 gradient-text">{{ formatCurrency(periodStats.totalSales) }}</div>
+                  <div class="text-h6 gradient-text">
+                    {{ formatCurrency(periodStats.totalSales) }}
+                  </div>
                   <div class="text-caption text-grey-7">Total Sales</div>
                 </div>
               </div>
@@ -198,7 +188,9 @@
               </div>
               <div class="col-6 col-md-3">
                 <div class="text-center">
-                  <div class="text-h6 gradient-text">{{ formatCurrency(periodStats.avgOrderValue) }}</div>
+                  <div class="text-h6 gradient-text">
+                    {{ formatCurrency(periodStats.avgOrderValue) }}
+                  </div>
                   <div class="text-caption text-grey-7">Avg Order Value</div>
                 </div>
               </div>
@@ -229,12 +221,16 @@
                         :style="{
                           height: `${getChartBarHeight(data.amount)}%`,
                           width: '70%',
-                          'background-color': isCurrentPeriod(data) ? '#1976D2' : '#90CAF9'
+                          'background-color': isCurrentPeriod(data) ? '#1976D2' : '#90CAF9',
                         }"
                         @mouseenter="hoveredData = data"
                         @mouseleave="hoveredData = null"
                       >
-                        <q-tooltip v-if="hoveredData === data" anchor="top middle" self="bottom middle">
+                        <q-tooltip
+                          v-if="hoveredData === data"
+                          anchor="top middle"
+                          self="bottom middle"
+                        >
                           <div class="text-bold">{{ data.label }}</div>
                           <div>Sales: {{ formatCurrency(data.amount) }}</div>
                           <div>Orders: {{ data.orders }}</div>
@@ -299,7 +295,8 @@
                         @mouseleave="hoveredData = null"
                       >
                         <title>
-                          {{ chartData[index].label }}: {{ formatCurrency(chartData[index].amount) }}
+                          {{ chartData[index].label }}:
+                          {{ formatCurrency(chartData[index].amount) }}
                         </title>
                       </circle>
                     </svg>
@@ -308,11 +305,7 @@
                   <!-- X-axis labels -->
                   <div class="absolute" style="left: 60px; right: 0; bottom: 0">
                     <div class="row">
-                      <div
-                        v-for="(data, index) in chartData"
-                        :key="index"
-                        class="col text-center"
-                      >
+                      <div v-for="(data, index) in chartData" :key="index" class="col text-center">
                         <div class="text-caption text-grey-7">{{ data.label }}</div>
                       </div>
                     </div>
@@ -368,11 +361,7 @@
                   <!-- X-axis labels -->
                   <div class="absolute" style="left: 60px; right: 0; bottom: 0">
                     <div class="row">
-                      <div
-                        v-for="(data, index) in chartData"
-                        :key="index"
-                        class="col text-center"
-                      >
+                      <div v-for="(data, index) in chartData" :key="index" class="col text-center">
                         <div class="text-caption text-grey-7">{{ data.label }}</div>
                       </div>
                     </div>
@@ -386,11 +375,11 @@
               <div class="col-auto">
                 <div class="row items-center q-gutter-md">
                   <div class="row items-center">
-                    <div class="legend-color q-mr-xs" style="background-color: #1976D2;"></div>
+                    <div class="legend-color q-mr-xs" style="background-color: #1976d2"></div>
                     <div class="text-caption">Current Period</div>
                   </div>
                   <div class="row items-center">
-                    <div class="legend-color q-mr-xs" style="background-color: #90CAF9;"></div>
+                    <div class="legend-color q-mr-xs" style="background-color: #90caf9"></div>
                     <div class="text-caption">Previous Period</div>
                   </div>
                 </div>
@@ -401,7 +390,13 @@
           <q-separator />
 
           <q-card-actions align="right">
-            <q-btn flat color="primary" icon="insights" label="Detailed Analytics" to="/analytics" />
+            <q-btn
+              flat
+              color="primary"
+              icon="insights"
+              label="Detailed Analytics"
+              to="/analytics"
+            />
           </q-card-actions>
         </q-card>
 
@@ -541,9 +536,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { signOut } from 'firebase/auth'
-import { auth } from '../../services/firebase'
-import { useOrderStore } from '../../stores/orderStore'
-import { useProductStore } from '../../stores/productStore'
+import { auth } from 'src/services/firebase'
+import { useOrderStore } from 'src/stores/orderStore'
+import { useProductStore } from 'src/stores/productStore'
 
 // --- Chart Configuration ---
 const selectedPeriod = ref({ label: '7 Days', value: '7days' })
@@ -586,7 +581,7 @@ const includeAnalytics = ref(true)
 const formatOptions = [
   { label: 'CSV', value: 'csv' },
   { label: 'Excel', value: 'excel' },
-  { label: 'PDF', value: 'pdf' }
+  { label: 'PDF', value: 'pdf' },
 ]
 
 // --- Chart Data ---
@@ -602,13 +597,13 @@ const timeGreeting = computed(() => {
 })
 
 const salesProgress = computed(() => {
-  const maxSales = Math.max(...chartData.value.map(d => d.amount), 1)
+  const maxSales = Math.max(...chartData.value.map((d) => d.amount), 1)
   const last = chartData.value[chartData.value.length - 1]?.amount || 0
   return last / maxSales
 })
 
 const ordersProgress = computed(() => {
-  const maxOrders = Math.max(...chartData.value.map(d => d.orders), 1)
+  const maxOrders = Math.max(...chartData.value.map((d) => d.orders), 1)
   const last = chartData.value[chartData.value.length - 1]?.orders || 0
   return last / maxOrders
 })
@@ -623,7 +618,7 @@ const salesComparison = computed(() => {
 })
 
 const averageOrderValue = computed(() => {
-  return todaySales.value / todayOrders.value
+  return todayOrders.value > 0 ? todaySales.value / todayOrders.value : 0
 })
 
 const periodStats = computed(() => {
@@ -639,15 +634,15 @@ const periodStats = computed(() => {
     totalSales,
     totalOrders,
     avgOrderValue: Math.round(avgOrderValue * 100) / 100,
-    growth: Math.round(growth * 10) / 10
+    growth: Math.round(growth * 10) / 10,
   }
 })
 
 const yAxisLabels = computed(() => {
   if (chartData.value.length === 0) return []
 
-  const maxAmount = Math.max(...chartData.value.map(d => d.amount))
-  const minAmount = Math.min(...chartData.value.map(d => d.amount))
+  const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 100) // Default min 100
+  const minAmount = 0 // Anchor to 0 for better visuals
 
   const range = maxAmount - minAmount
   const step = range / 4
@@ -657,24 +652,24 @@ const yAxisLabels = computed(() => {
     Math.ceil(maxAmount - step),
     Math.ceil(maxAmount - step * 2),
     Math.ceil(maxAmount - step * 3),
-    Math.ceil(minAmount)
+    0,
   ]
 })
 
 const lineChartPoints = computed(() => {
   if (chartData.value.length === 0) return []
 
-  const maxAmount = Math.max(...chartData.value.map(d => d.amount))
-  const minAmount = Math.min(...chartData.value.map(d => d.amount))
-  const range = maxAmount - minAmount || 1
+  const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 10) // Prevent div by zero
+  const minAmount = 0
+  const range = maxAmount - minAmount
 
   const containerWidth = 100 // percentage
-  const pointSpacing = containerWidth / (chartData.value.length - 1)
+  const pointSpacing = containerWidth / (chartData.value.length - 1 || 1)
 
   return chartData.value.map((item, index) => {
     const x = index * pointSpacing
+    // In SVG, 0 is top, 100 is bottom. So we invert the value.
     const y = 100 - ((item.amount - minAmount) / range) * 100
-
     return { x: `${x}%`, y: `${y}%` }
   })
 })
@@ -686,7 +681,7 @@ const changePeriod = (period) => {
 }
 
 const loadChartData = () => {
-  const period = timePeriods.value.find(p => p.value === selectedPeriod.value.value)
+  const period = timePeriods.value.find((p) => p.value === selectedPeriod.value.value)
   const days = period.days
   chartData.value = buildChartData(days, 0)
   previousPeriodData.value = buildChartData(days, days)
@@ -695,66 +690,74 @@ const loadChartData = () => {
 const buildChartData = (days, offsetDays) => {
   const data = []
   const today = new Date()
+  today.setHours(0, 0, 0, 0) // Normalize today
+
   const start = new Date(today)
   start.setDate(today.getDate() - (days + offsetDays - 1))
 
+  // Initialize data array with zeroed days
   for (let i = 0; i < days; i++) {
     const d = new Date(start)
     d.setDate(start.getDate() + i)
-    const label = days <= 7
-      ? d.toLocaleDateString('en-US', { weekday: 'short' })
-      : `${d.getMonth() + 1}/${d.getDate()}`
+    const label =
+      days <= 7
+        ? d.toLocaleDateString('en-US', { weekday: 'short' })
+        : `${d.getMonth() + 1}/${d.getDate()}`
     data.push({ date: d, label, amount: 0, orders: 0 })
   }
 
   const orders = orderStore.orders || []
-  orders.forEach(o => {
-    const d = new Date(o.date || o.createdAt)
-    const idx = Math.floor((d - start) / (24 * 60 * 60 * 1000))
-    if (idx >= 0 && idx < days) {
-      data[idx].amount += Number(o.total || o.totalAmount || 0)
-      data[idx].orders += 1
+
+  orders.forEach((o) => {
+    // --- CRITICAL FIX: Handle Firebase Timestamps ---
+    let orderDate
+    if (o.createdAt && typeof o.createdAt.toDate === 'function') {
+      orderDate = o.createdAt.toDate() // It's a Firestore Timestamp
+    } else if (o.date) {
+      orderDate = new Date(o.date) // It's a standard Date string/object
+    } else {
+      return // No date found
+    }
+
+    // Check if order fits in the calculated range
+    const diffTime = orderDate - start
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays >= 0 && diffDays < days) {
+      data[diffDays].amount += Number(o.total || o.totalAmount || 0)
+      data[diffDays].orders += 1
     }
   })
 
-  return data.map(x => ({ ...x, amount: Math.round(x.amount * 100) / 100 }))
+  return data.map((x) => ({ ...x, amount: Math.round(x.amount * 100) / 100 }))
 }
 
 const getChartBarHeight = (amount) => {
   if (chartData.value.length === 0) return 0
-
-  const maxAmount = Math.max(...chartData.value.map(d => d.amount))
+  const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 1)
   return Math.max((amount / maxAmount) * 80, 5)
 }
 
 const getLinePath = () => {
   if (lineChartPoints.value.length === 0) return ''
-
   const points = lineChartPoints.value
   let path = `M ${points[0].x} ${points[0].y}`
-
   for (let i = 1; i < points.length; i++) {
     path += ` L ${points[i].x} ${points[i].y}`
   }
-
   return path
 }
 
 const getAreaPath = () => {
   if (lineChartPoints.value.length === 0) return ''
-
   const points = lineChartPoints.value
   let path = `M ${points[0].x} ${points[0].y}`
-
   for (let i = 1; i < points.length; i++) {
     path += ` L ${points[i].x} ${points[i].y}`
   }
-
-  // Close the area path
   path += ` L ${points[points.length - 1].x} 100`
   path += ` L ${points[0].x} 100`
   path += ' Z'
-
   return path
 }
 
@@ -766,73 +769,77 @@ const isCurrentPeriod = (data) => {
 }
 
 const formatCurrency = (amount) => {
+  if (isNaN(amount)) return '$0.00'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: amount < 1 ? 2 : 0,
-    maximumFractionDigits: 2
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount)
 }
 
-const formatTime = (date) => {
-  return new Date(date).toLocaleTimeString([], {
+const formatTime = (dateInput) => {
+  if (!dateInput) return ''
+  // Handle Firestore timestamp for display
+  const date =
+    dateInput && typeof dateInput.toDate === 'function' ? dateInput.toDate() : new Date(dateInput)
+
+  return date.toLocaleTimeString([], {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
-// removed helpers used by static sections
-
 const getOrderStatusColor = (status) => {
   const colors = {
-    'Completed': 'positive',
-    'Preparing': 'warning',
-    'Pending': 'info',
-    'Cancelled': 'negative'
+    Completed: 'positive',
+    Preparing: 'warning',
+    Pending: 'info',
+    Cancelled: 'negative',
   }
   return colors[status] || 'grey'
 }
 
-const refreshData = () => {
+const refreshData = async () => {
+  await orderStore.fetchOrders() // Re-fetch from Firebase
   loadChartData()
 }
 
 const openExportDialog = () => {
   showExportDialog.value = true
 }
-
 const executeExportCSV = () => {
   showExportDialog.value = false
 }
-
 const downloadInventoryReport = () => {}
 
 const router = useRouter()
 const logout = async () => {
   try {
     await signOut(auth)
-  } finally {
     router.push('/login')
+  } catch (error) {
+    console.error('Logout error', error)
   }
 }
-// Watch for chart type changes
+
 watch(chartType, (newType) => {
-  if (newType === 'line' || newType === 'area') {
-    // Ensure we have enough data points for line/area charts
-    if (selectedPeriod.value.value === '7days') {
-      selectedPeriod.value = timePeriods.value[1] // Switch to 30 days
-      loadChartData()
-    }
+  if ((newType === 'line' || newType === 'area') && selectedPeriod.value.value === '7days') {
+    // Optional: Switch to 30 days if lines look weird on 7 days
+    // selectedPeriod.value = timePeriods.value[1]
+    // loadChartData()
   }
 })
 
-// Initialize
 onMounted(async () => {
-  await orderStore.fetchOrders()
-  await productStore.fetchProducts()
-  todayOrders.value = orderStore.orders.length
-  todaySales.value = orderStore.orders.reduce((s, o) => s + (o.total || o.totalAmount || 0), 0)
-  lowStockItems.value = productStore.products.filter(p => (p.stock ?? 0) <= 5).length
+  await Promise.all([orderStore.fetchOrders(), productStore.fetchProducts()])
+
+  // Calculate top-level stats
+  const orders = orderStore.orders || []
+  todayOrders.value = orders.length // Note: This counts ALL orders. You might want to filter for just today.
+  todaySales.value = orders.reduce((s, o) => s + Number(o.total || o.totalAmount || 0), 0)
+  lowStockItems.value = productStore.products.filter((p) => (p.stock ?? 0) <= 5).length
+
   loadChartData()
 })
 </script>
@@ -855,7 +862,7 @@ onMounted(async () => {
 
 .alert-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chart-bar {

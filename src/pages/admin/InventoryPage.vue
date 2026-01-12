@@ -6,26 +6,57 @@
           <q-card-section>
             <div class="text-h6">Inventory Management</div>
           </q-card-section>
-          
+
           <q-separator />
 
           <q-card-section>
-             <div class="row q-col-gutter-md q-mb-md">
+            <div class="row q-col-gutter-md q-mb-md">
               <div class="col-12 col-md-4">
                 <q-input v-model="searchQuery" outlined dense placeholder="Search">
                   <template v-slot:prepend><q-icon name="search" /></template>
                 </q-input>
               </div>
               <div class="col-12 col-md-4">
-                <q-select v-model="selectedCategory" :options="categoryOptions" outlined dense label="Category" emit-value />
+                <q-select
+                  v-model="selectedCategory"
+                  :options="categoryOptions"
+                  outlined
+                  dense
+                  label="Category"
+                  emit-value
+                />
               </div>
               <div class="col-12 col-md-4">
-                <q-select v-model="selectedStock" :options="stockOptions" outlined dense label="Stock" emit-value />
+                <q-select
+                  v-model="selectedStock"
+                  :options="stockOptions"
+                  outlined
+                  dense
+                  label="Stock"
+                  emit-value
+                />
               </div>
               <div class="col-12">
-                <q-btn color="primary" icon="category" label="Add Category" class="q-mr-sm" @click="showAddCategoryDialog = true" />
-                <q-btn color="primary" icon="add" label="Add Product" @click="showAddProductDialog = true" />
-                <q-btn color="secondary" icon="download" label="Export" class="q-ml-sm" @click="exportInventory" />
+                <q-btn
+                  color="primary"
+                  icon="category"
+                  label="Add Category"
+                  class="q-mr-sm"
+                  @click="showAddCategoryDialog = true"
+                />
+                <q-btn
+                  color="primary"
+                  icon="add"
+                  label="Add Product"
+                  @click="showAddProductDialog = true"
+                />
+                <q-btn
+                  color="secondary"
+                  icon="download"
+                  label="Export"
+                  class="q-ml-sm"
+                  @click="exportInventory"
+                />
               </div>
             </div>
 
@@ -45,13 +76,37 @@
               </template>
               <template v-slot:body-cell-actions="props">
                 <q-td :props="props">
-                  <q-btn flat round dense icon="edit" color="primary" @click="openEditDialog(props.row)" />
-                  <q-btn flat round dense icon="delete" color="negative" @click="confirmDelete(props.row)" />
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    icon="edit"
+                    color="primary"
+                    @click="openEditDialog(props.row)"
+                  />
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    icon="delete"
+                    color="negative"
+                    @click="confirmDelete(props.row)"
+                  />
                 </q-td>
               </template>
               <template v-slot:body-cell-stock="props">
                 <q-td :props="props">
-                  <q-chip :color="props.row.productStock < 10 ? 'negative' : props.row.productStock < 50 ? 'warning' : 'positive'" text-color="white" dense>
+                  <q-chip
+                    :color="
+                      props.row.productStock < 10
+                        ? 'negative'
+                        : props.row.productStock < 50
+                          ? 'warning'
+                          : 'positive'
+                    "
+                    text-color="white"
+                    dense
+                  >
                     {{ props.row.productStock }}
                   </q-chip>
                 </q-td>
@@ -70,53 +125,62 @@
 
         <q-card-section>
           <q-form ref="myForm" class="q-gutter-md">
-            <q-input 
-              v-model="productForm.productName" 
-              label="Product Name" 
-              outlined 
-              dense 
-              :rules="[val => !!val || 'Product name is required']"
+            <q-input
+              v-model="productForm.productName"
+              label="Product Name"
+              outlined
+              dense
+              :rules="[(val) => !!val || 'Product name is required']"
             />
-            
+
             <div class="row q-col-gutter-sm">
               <div class="col-6">
-                 <q-input 
-                   v-model.number="productForm.productPrice" 
-                   label="Price" 
-                   type="number" 
-                   outlined 
-                   dense 
-                   :rules="[val => val !== null && val !== '' || 'Price is required', val => val >= 0 || 'Cannot be negative']"
-                 />
+                <q-input
+                  v-model.number="productForm.productPrice"
+                  label="Price"
+                  type="number"
+                  outlined
+                  dense
+                  :rules="[
+                    (val) => (val !== null && val !== '') || 'Price is required',
+                    (val) => val >= 0 || 'Cannot be negative',
+                  ]"
+                />
               </div>
               <div class="col-6">
-                 <q-input 
-                   v-model.number="productForm.productCost" 
-                   label="Cost" 
-                   type="number" 
-                   outlined 
-                   dense 
-                   :rules="[val => val !== null && val !== '' || 'Cost is required', val => val >= 0 || 'Cannot be negative']"
-                 />
+                <q-input
+                  v-model.number="productForm.productCost"
+                  label="Cost"
+                  type="number"
+                  outlined
+                  dense
+                  :rules="[
+                    (val) => (val !== null && val !== '') || 'Cost is required',
+                    (val) => val >= 0 || 'Cannot be negative',
+                  ]"
+                />
               </div>
             </div>
 
-            <q-input 
-              v-model.number="productForm.productStock" 
-              label="Stock Quantity" 
-              type="number" 
-              outlined 
-              dense 
-              :rules="[val => val !== null && val !== '' || 'Stock is required', val => val >= 0 || 'Cannot be negative']"
+            <q-input
+              v-model.number="productForm.productStock"
+              label="Stock Quantity"
+              type="number"
+              outlined
+              dense
+              :rules="[
+                (val) => (val !== null && val !== '') || 'Stock is required',
+                (val) => val >= 0 || 'Cannot be negative',
+              ]"
             />
-            
-            <q-select 
-              v-model="productForm.productCategory" 
-              :options="categoriesForForm" 
-              label="Category" 
-              outlined 
-              dense 
-              :rules="[val => !!val || 'Category is required']"
+
+            <q-select
+              v-model="productForm.productCategory"
+              :options="categoriesForForm"
+              label="Category"
+              outlined
+              dense
+              :rules="[(val) => !!val || 'Category is required']"
             />
           </q-form>
         </q-card-section>
@@ -127,7 +191,7 @@
             flat
             label="Save"
             color="primary"
-            @click="submitForm" 
+            @click="submitForm"
             :loading="productStore.loading"
           />
         </q-card-actions>
@@ -141,8 +205,21 @@
         </q-card-section>
         <q-card-section>
           <q-form @submit.prevent="handleSaveCategory" id="categoryForm">
-            <q-input v-model="categoryForm.name" label="Name" outlined dense class="q-mb-md" :rules="[val => !!val || 'Required']" />
-            <q-input v-model="categoryForm.description" label="Description" type="textarea" outlined dense />
+            <q-input
+              v-model="categoryForm.name"
+              label="Name"
+              outlined
+              dense
+              class="q-mb-md"
+              :rules="[(val) => !!val || 'Required']"
+            />
+            <q-input
+              v-model="categoryForm.description"
+              label="Description"
+              type="textarea"
+              outlined
+              dense
+            />
           </q-form>
         </q-card-section>
         <q-card-actions align="right">
@@ -179,7 +256,7 @@ const productForm = reactive({
   productPrice: 0,
   productCost: 0,
   productStock: 0,
-  productCategory: ''
+  productCategory: '',
 })
 
 const categoryForm = reactive({ name: '', description: '' })
@@ -187,8 +264,22 @@ const categoryForm = reactive({ name: '', description: '' })
 const columns = [
   { name: 'name', label: 'Product Name', field: 'productName', align: 'left', sortable: true },
   { name: 'category', label: 'Category', field: 'productCategory', align: 'left', sortable: true },
-  { name: 'price', label: 'Price', field: 'productPrice', align: 'right', sortable: true, format: (val) => `$${Number(val).toFixed(2)}` },
-  { name: 'cost', label: 'Cost', field: 'productCost', align: 'right', sortable: true, format: (val) => `$${Number(val).toFixed(2)}` },
+  {
+    name: 'price',
+    label: 'Price',
+    field: 'productPrice',
+    align: 'right',
+    sortable: true,
+    format: (val) => `$${Number(val).toFixed(2)}`,
+  },
+  {
+    name: 'cost',
+    label: 'Cost',
+    field: 'productCost',
+    align: 'right',
+    sortable: true,
+    format: (val) => `$${Number(val).toFixed(2)}`,
+  },
   { name: 'stock', label: 'Stock', field: 'productStock', align: 'center', sortable: true },
   { name: 'actions', label: 'Actions', field: 'actions', align: 'center' },
 ]
@@ -198,15 +289,19 @@ onMounted(() => {
   categoryStore.fetchCategories()
 })
 
-const categoryOptions = computed(() => ['All', ...((categoryStore.categories || []).map(c => c.name))])
-const categoriesForForm = computed(() => (categoryStore.categories || []).map(c => c.name))
+const categoryOptions = computed(() => [
+  'All',
+  ...(categoryStore.categories || []).map((c) => c.name),
+])
+const categoriesForForm = computed(() => (categoryStore.categories || []).map((c) => c.name))
 const stockOptions = ['All', 'Out of Stock', 'Low', 'Medium', 'High']
 
 const filteredProducts = computed(() => {
   let items = productStore.products || []
-  if (selectedCategory.value !== 'All') items = items.filter(p => p.productCategory === selectedCategory.value)
+  if (selectedCategory.value !== 'All')
+    items = items.filter((p) => p.productCategory === selectedCategory.value)
   if (selectedStock.value !== 'All') {
-    items = items.filter(p => {
+    items = items.filter((p) => {
       const s = Number(p.productStock) || 0
       if (selectedStock.value === 'Out of Stock') return s === 0
       if (selectedStock.value === 'Low') return s > 0 && s < 10
@@ -217,7 +312,10 @@ const filteredProducts = computed(() => {
   }
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
-    items = items.filter(p => p.productName?.toLowerCase().includes(q) || p.productCategory?.toLowerCase().includes(q))
+    items = items.filter(
+      (p) =>
+        p.productName?.toLowerCase().includes(q) || p.productCategory?.toLowerCase().includes(q),
+    )
   }
   return items
 })
@@ -225,11 +323,11 @@ const filteredProducts = computed(() => {
 const openEditDialog = (product) => {
   editingProduct.value = product
   Object.assign(productForm, {
-      productName: product.productName,
-      productPrice: product.productPrice,
-      productCost: product.productCost,
-      productStock: product.productStock,
-      productCategory: product.productCategory
+    productName: product.productName,
+    productPrice: product.productPrice,
+    productCost: product.productCost,
+    productStock: product.productStock,
+    productCategory: product.productCategory,
   })
   showAddProductDialog.value = true
 }
@@ -238,7 +336,7 @@ const openEditDialog = (product) => {
 const submitForm = async () => {
   // Triggers the :rules on all inputs
   const success = await myForm.value.validate()
-  
+
   if (success) {
     // If valid, proceed to save
     await handleSaveProduct()
@@ -247,7 +345,7 @@ const submitForm = async () => {
     $q.notify({
       color: 'negative',
       message: 'Please fill in all required fields.',
-      icon: 'warning'
+      icon: 'warning',
     })
   }
 }
@@ -273,7 +371,7 @@ const confirmDelete = (product) => {
     title: 'Delete Product',
     message: `Are you sure you want to remove ${product.productName}?`,
     cancel: true,
-    persistent: true
+    persistent: true,
   }).onOk(async () => {
     try {
       await productStore.deleteProduct(product.id)
@@ -297,14 +395,46 @@ const closeProductDialog = () => {
   })
 }
 
-const exportInventory = () => { console.log('Exporting data:', productStore.products) }
+const exportInventory = () => {
+  console.log('Exporting data:', productStore.products)
+}
+// Inside InventoryPage.vue <script setup>
+
 const handleSaveCategory = async () => {
   try {
-    if (!categoryForm.name) return
+    if (!categoryForm.name) {
+      $q.notify({
+        color: 'negative',
+        message: 'Category name is required',
+        icon: 'warning',
+      })
+      return
+    }
+
+    // 1. Attempt to add to Firebase
     await categoryStore.addCategory({ ...categoryForm })
-    $q.notify({ color: 'positive', message: 'Category created successfully', icon: 'check' })
+
+    // 2. Success Feedback
+    $q.notify({
+      color: 'positive',
+      message: 'Category created successfully',
+      icon: 'check',
+    })
+
+    // 3. Clear and Close
     closeCategoryDialog()
-  } catch(e) { console.error(e) }
+
+    // 4. (Optional) Refresh list immediately if your store doesn't auto-update
+    await categoryStore.fetchCategories()
+  } catch (e) {
+    console.error(e)
+    // 5. SHOW THE ERROR TO THE USER
+    $q.notify({
+      color: 'negative',
+      message: 'Permission denied. Check your console or Firestore Rules.',
+      icon: 'report_problem',
+    })
+  }
 }
 const closeCategoryDialog = () => {
   showAddCategoryDialog.value = false
