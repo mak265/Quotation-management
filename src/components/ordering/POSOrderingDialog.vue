@@ -145,7 +145,7 @@
                         {{ item.selectedSize.label }}
                       </span>
                       <span v-if="item.selectedAddons && item.selectedAddons.length > 0">
-                        + {{ item.selectedAddons.map((a) => a.label).join(', ') }}
+                        + {{ item.selectedAddons.map((a) => a.name || a.label).join(', ') }}
                       </span>
                     </div>
                     <div v-if="item.note" class="text-caption text-italic text-grey-6">
@@ -246,19 +246,38 @@
                 <div class="text-subtitle2 q-mb-xs">Add-ons</div>
                 <q-list bordered separator class="rounded-borders">
                   <q-item
-                    tag="label"
                     v-for="addon in activeProduct.addons"
-                    :key="addon.label"
+                    :key="addon.id || addon.label"
+                    tag="label"
                     v-ripple
                     dense
+                    :class="addon.status === 'Unavailable' ? 'text-grey-6' : ''"
                   >
                     <q-item-section avatar>
-                      <q-checkbox v-model="customizationForm.addons" :val="addon" />
+                      <q-checkbox
+                        v-model="customizationForm.addons"
+                        :val="addon"
+                        :disable="addon.status === 'Unavailable'"
+                      />
                     </q-item-section>
                     <q-item-section>
-                      <q-item-label>{{ addon.label }}</q-item-label>
+                      <q-item-label>{{ addon.name || addon.label }}</q-item-label>
+                      <q-item-label caption>{{ addon.category }}</q-item-label>
                     </q-item-section>
-                    <q-item-section side> +${{ addon.price.toFixed(2) }} </q-item-section>
+                    <q-item-section side>
+                      <div class="column items-end">
+                        <div>+${{ Number(addon.price || 0).toFixed(2) }}</div>
+                        <q-badge
+                          v-if="addon.status"
+                          :color="addon.status === 'Available' ? 'positive' : 'grey-6'"
+                          class="q-mt-xs"
+                          outline
+                          dense
+                        >
+                          {{ addon.status }}
+                        </q-badge>
+                      </div>
+                    </q-item-section>
                   </q-item>
                 </q-list>
               </div>
@@ -317,6 +336,8 @@ import { date, useQuasar } from 'quasar'
 // --- FIREBASE IMPORTS ---
 import { db } from 'src/services/firebase' // Adjust path to your firebase config
 import { collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore'
+import { useAddonStore } from 'src/stores/addonStore'
+import { useOrderStore } from 'src/stores/orderStore'
 
 // Components
 import ProductCard from 'src/components/ordering/ProductCard.vue'
@@ -325,6 +346,8 @@ import CheckoutSummary from 'src/components/ordering/CheckoutSummary.vue'
 
 // Initialize
 const $q = useQuasar()
+const addonStore = useAddonStore()
+const orderStore = useOrderStore()
 
 // Props & Emits
 defineProps({
@@ -341,7 +364,7 @@ const products = ref([]) // Now empty initially
 const loadingProducts = ref(true)
 let unsubscribeProducts = null // For cleanup
 
-const customer = reactive({
+const customer = ref({
   name: '',
   email: '',
   phone: '',
@@ -452,6 +475,9 @@ const promptAddToCart = (product) => {
   customizationForm.quantity = 1
   customizationForm.note = ''
 
+  // Attach globally fetched add-ons to active product
+  activeProduct.value.addons = Array.isArray(addonStore.addons) ? addonStore.addons : []
+
   customizationDialog.value = true
 }
 
@@ -506,10 +532,17 @@ const clearCart = () => {
     cancel: true,
   }).onOk(() => {
     cart.value = []
-    customer.name = ''
-    customer.email = ''
-    customer.phone = ''
+    customer.value.name = ''
+    customer.value.email = ''
+    customer.value.phone = ''
   })
+}
+
+const clearCartSilently = () => {
+  cart.value = []
+  customer.value.name = ''
+  customer.value.email = ''
+  customer.value.phone = ''
 }
 
 const saveAsDraft = () => {
@@ -523,33 +556,43 @@ const saveAsDraft = () => {
 
 // Receive calculation summary from CheckoutSummary component
 const submitOrder = async (summaryData) => {
-  if (!customer.name) {
+  if (!customer.value.name) {
     $q.notify({ type: 'warning', message: 'Please enter customer name' })
     return
   }
 
   // Prepare data for Firestore
   const orderData = {
-    customer,
+    customer: customer.value,
+    customerName: customer.value.name || '',
     status: 'Paid',
     ...summaryData, // spread subtotal, tax, total from child
+    itemCount: summaryData.itemCount,
     items: cart.value.map((item) => ({
       productId: item.product.id,
-      name: item.product.productName,
+      name: item.product.productName || item.product.name || 'Unknown Item',
       sku: item.product.sku || 'N/A',
+      category: item.product.productCategory || item.product.category || 'Other',
+      image: item.product.productImage || item.product.image || null,
       variant: item.selectedSize ? item.selectedSize.label : 'Standard',
-      addons: item.selectedAddons.map((a) => a.label),
+      addons: item.selectedAddons.map((a) => ({
+        id: a.id || null,
+        name: a.name || a.label,
+        price: Number(a.price || 0),
+      })),
       unitPrice: item.unitPrice,
       quantity: item.quantity,
       note: item.note,
     })),
     createdAt: serverTimestamp(),
+    time: serverTimestamp(),
     orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
   }
 
   try {
     // 1. Save to Firestore
     await addDoc(collection(db, 'orders'), orderData)
+    await orderStore.fetchOrders()
 
     // 2. (Optional) Update Pinia store if you cache orders there
     // orderStore.addOrder(orderData)
@@ -561,7 +604,7 @@ const submitOrder = async (summaryData) => {
       position: 'top-right',
     })
 
-    clearCart()
+    clearCartSilently()
     emit('update:modelValue', false)
   } catch (error) {
     console.error('POS Error:', error)
@@ -575,9 +618,12 @@ const submitOrder = async (summaryData) => {
 
 // --- Lifecycle Hooks ---
 
-// In src/components/ordering/POSOrderingDialog.vue
-
 onMounted(() => {
+  // Fetch add-ons once when POS dialog mounts
+  if (!addonStore.addons.length) {
+    addonStore.fetchAddons()
+  }
+
   const q = query(collection(db, 'products'))
 
   unsubscribeProducts = onSnapshot(

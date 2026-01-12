@@ -466,13 +466,13 @@
               <q-item-section>
                 <q-item-label>Order #{{ order.id }}</q-item-label>
                 <q-item-label caption>
-                  {{ formatTime(order.time) }} • {{ order.items }} items
+                  {{ formatTime(order.createdAt || order.time || order.date) }} • {{ order.itemCount || (Array.isArray(order.items) ? order.items.length : 0) }} items
                 </q-item-label>
               </q-item-section>
 
               <q-item-section side>
                 <div class="text-right">
-                  <div class="text-subtitle2">{{ formatCurrency(order.amount) }}</div>
+                  <div class="text-subtitle2">{{ formatCurrency(orderTotal(order)) }}</div>
                   <q-badge :color="getOrderStatusColor(order.status)" :label="order.status" />
                 </div>
               </q-item-section>
@@ -569,7 +569,16 @@ const activeTables = ref(0)
 const occupiedTables = ref(0)
 const totalTables = ref(0)
 
-const recentOrders = computed(() => (orderStore.orders || []).slice(0, 5))
+const recentOrders = computed(() => {
+  const list = orderStore.orders || []
+  return [...list]
+    .sort((a, b) => {
+      const da = a.createdAt && typeof a.createdAt.toDate === 'function' ? a.createdAt.toDate() : new Date(a.createdAt || a.date || 0)
+      const db = b.createdAt && typeof b.createdAt.toDate === 'function' ? b.createdAt.toDate() : new Date(b.createdAt || b.date || 0)
+      return db - da
+    })
+    .slice(0, 5)
+})
 
 // Export State
 const showExportDialog = ref(false)
@@ -798,6 +807,16 @@ const getOrderStatusColor = (status) => {
     Cancelled: 'negative',
   }
   return colors[status] || 'grey'
+}
+
+const orderTotal = (order) => {
+  const t = order.totalAmount ?? order.total
+  if (typeof t === 'number') return t
+  const items = Array.isArray(order.items) ? order.items : []
+  const subtotal = items.reduce((s, i) => s + Number(i.unitPrice ?? i.price ?? i.productPrice ?? 0) * Number(i.quantity ?? 1), 0)
+  const tax = Number(order.taxAmount ?? 0)
+  const discount = Number(order.discountAmount ?? 0)
+  return subtotal + tax - discount
 }
 
 const refreshData = async () => {

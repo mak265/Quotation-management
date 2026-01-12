@@ -17,6 +17,9 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-4">
+                <q-toggle v-model="showAddons" label="Show Add-ons" />
+              </div>
+              <div class="col-12 col-md-4" v-if="!showAddons">
                 <q-select
                   v-model="selectedCategory"
                   :options="categoryOptions"
@@ -26,7 +29,7 @@
                   emit-value
                 />
               </div>
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-4" v-if="!showAddons">
                 <q-select
                   v-model="selectedStock"
                   :options="stockOptions"
@@ -36,7 +39,27 @@
                   emit-value
                 />
               </div>
-              <div class="col-12">
+              <div class="col-12 col-md-4" v-if="showAddons">
+                <q-select
+                  v-model="selectedAddonAvailability"
+                  :options="addonAvailabilityOptions"
+                  outlined
+                  dense
+                  label="Availability"
+                  emit-value
+                />
+              </div>
+              <div class="col-12 col-md-4" v-if="showAddons">
+                <q-select
+                  v-model="selectedAddonCategory"
+                  :options="addonCategoryFilterOptions"
+                  outlined
+                  dense
+                  label="Add-on Category"
+                  emit-value
+                />
+              </div>
+              <div class="col-12" v-if="!showAddons">
                 <q-btn
                   color="primary"
                   icon="category"
@@ -58,6 +81,14 @@
                   @click="showExportDialog = true"
                 />
               </div>
+              <div class="col-12" v-else>
+                <q-btn
+                  color="primary"
+                  icon="add"
+                  label="Add Add-on"
+                  @click="showAddAddonDialog = true"
+                />
+              </div>
             </div>
 
             <q-table
@@ -67,6 +98,7 @@
               :loading="productStore.loading"
               flat
               bordered
+              v-if="!showAddons"
             >
               <template v-slot:no-data="{ filter }">
                 <div class="full-width row flex-center q-gutter-sm q-pa-lg text-grey-8">
@@ -110,6 +142,36 @@
                     {{ props.row.productStock }}
                   </q-chip>
                 </q-td>
+              </template>
+            </q-table>
+
+            <q-table
+              :rows="filteredAddons"
+              :columns="addonColumns"
+              row-key="id"
+              :loading="addonStore.loading"
+              flat
+              bordered
+              v-else
+            >
+              <template v-slot:body-cell-status="props">
+                <q-td :props="props">
+                  <q-badge :color="props.row.status === 'Available' ? 'positive' : 'grey-7'">
+                    {{ props.row.status }}
+                  </q-badge>
+                </q-td>
+              </template>
+              <template v-slot:body-cell-actions="props">
+                <q-td :props="props">
+                  <q-btn flat round dense icon="edit" color="primary" @click="openEditAddonDialog(props.row)" />
+                  <q-btn flat round dense icon="delete" color="negative" @click="confirmDeleteAddon(props.row)" />
+                </q-td>
+              </template>
+              <template v-slot:no-data>
+                <div class="full-width row flex-center q-gutter-sm q-pa-lg text-grey-8">
+                  <q-icon size="2em" name="extension" />
+                  <span>No add-ons</span>
+                </div>
               </template>
             </q-table>
           </q-card-section>
@@ -286,6 +348,27 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="showAddAddonDialog" persistent>
+      <q-card style="min-width: 400px">
+        <q-card-section>
+          <div class="text-h6">{{ editingAddon ? 'Edit Add-on' : 'Add Add-on' }}</div>
+        </q-card-section>
+        <q-card-section>
+          <q-form ref="addonFormRef" class="q-gutter-md">
+            <q-input v-model="addonForm.name" label="Add-On Name" outlined dense :rules="[(v)=>!!v || 'Required']" />
+            <q-select v-model="addonForm.category" :options="addonCategoryOptions" label="Category" outlined dense emit-value :rules="[(v)=>!!v || 'Required']" />
+            <q-input v-model.number="addonForm.price" label="Price" type="number" outlined dense :rules="[(v)=>v!==null && v!=='' || 'Required', (v)=>v>=0 || 'Cannot be negative']" />
+            <q-input v-model.number="addonForm.stock" label="Stock (optional)" type="number" outlined dense />
+            <q-select v-model="addonForm.status" :options="statusOptions" label="Status" outlined dense emit-value :rules="[(v)=>!!v || 'Required']" />
+          </q-form>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="primary" @click="closeAddonDialog" />
+          <q-btn flat label="Save" color="primary" @click="submitAddon" :loading="addonStore.loading" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -293,21 +376,27 @@
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { useProductStore } from '../../stores/productStore'
 import { useCategoryStore } from '../../stores/categoryStore'
+import { useAddonStore } from '../../stores/addonStore'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 const productStore = useProductStore()
 const categoryStore = useCategoryStore()
+const addonStore = useAddonStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref('All')
 const selectedStock = ref('All')
+const showAddons = ref(false)
 const showAddProductDialog = ref(false)
 const editingProduct = ref(null)
 const showAddCategoryDialog = ref(false)
+const showAddAddonDialog = ref(false)
+const editingAddon = ref(null)
 
 // Reference to the form element
 const myForm = ref(null)
+const addonFormRef = ref(null)
 
 const productForm = reactive({
   productName: '',
@@ -315,9 +404,17 @@ const productForm = reactive({
   productCost: 0,
   productStock: 0,
   productCategory: '',
+  productImage: ''
 })
 
 const categoryForm = reactive({ name: '', description: '' })
+const addonForm = reactive({
+  name: '',
+  category: '',
+  price: 0,
+  stock: null,
+  status: 'Available'
+})
 const productImageFile = ref(null)
 const productImagePreview = ref('')
 
@@ -361,10 +458,19 @@ const columns = [
   { name: 'stock', label: 'Stock', field: 'productStock', align: 'center', sortable: true },
   { name: 'actions', label: 'Actions', field: 'actions', align: 'center' },
 ]
+const addonColumns = [
+  { name: 'name', label: 'Add-On Name', field: 'name', align: 'left', sortable: true },
+  { name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true },
+  { name: 'price', label: 'Price', field: 'price', align: 'right', sortable: true, format: (v)=>`$${Number(v||0).toFixed(2)}` },
+  { name: 'stock', label: 'Stock', field: 'stock', align: 'center', sortable: true },
+  { name: 'status', label: 'Status', field: 'status', align: 'center', sortable: true },
+  { name: 'actions', label: 'Actions', field: 'actions', align: 'center' },
+]
 
 onMounted(() => {
   productStore.fetchProducts()
   categoryStore.fetchCategories()
+  addonStore.fetchAddons()
 })
 
 const categoryOptions = computed(() => [
@@ -373,6 +479,12 @@ const categoryOptions = computed(() => [
 ])
 const categoriesForForm = computed(() => (categoryStore.categories || []).map((c) => c.name))
 const stockOptions = ['All', 'Out of Stock', 'Low', 'Medium', 'High']
+const addonCategoryOptions = ['Toppings', 'Extras']
+const statusOptions = ['Available', 'Unavailable']
+const selectedAddonAvailability = ref('All')
+const selectedAddonCategory = ref('All')
+const addonAvailabilityOptions = ['All', 'Available', 'Unavailable']
+const addonCategoryFilterOptions = ['All', ...addonCategoryOptions]
 const showExportDialog = ref(false)
 const exportFormat = ref('csv')
 const formatOptions = [
@@ -407,6 +519,25 @@ const filteredProducts = computed(() => {
   return items
 })
 
+const filteredAddons = computed(() => {
+  let list = addonStore.addons || []
+  if (selectedAddonAvailability.value !== 'All') {
+    list = list.filter(a => a.status === selectedAddonAvailability.value)
+  }
+  if (selectedAddonCategory.value !== 'All') {
+    list = list.filter(a => a.category === selectedAddonCategory.value)
+  }
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(a =>
+      (a.name && a.name.toLowerCase().includes(q)) ||
+      (a.category && a.category.toLowerCase().includes(q)) ||
+      (a.status && a.status.toLowerCase().includes(q))
+    )
+  }
+  return list
+})
+
 const openEditDialog = (product) => {
   editingProduct.value = product
   Object.assign(productForm, {
@@ -418,6 +549,18 @@ const openEditDialog = (product) => {
     productImage: product.productImage || ''
   })
   showAddProductDialog.value = true
+}
+
+const openEditAddonDialog = (addon) => {
+  editingAddon.value = addon
+  Object.assign(addonForm, {
+    name: addon.name,
+    category: addon.category,
+    price: addon.price,
+    stock: addon.stock,
+    status: addon.status
+  })
+  showAddAddonDialog.value = true
 }
 
 // 1. New wrapper function to trigger validation manually
@@ -455,6 +598,59 @@ const handleSaveProduct = async () => {
     console.error(error)
     $q.notify({ color: 'negative', message: 'Error saving product', icon: 'report_problem' })
   }
+}
+
+const submitAddon = async () => {
+  const ok = await addonFormRef.value.validate()
+  if (!ok) {
+    $q.notify({ color: 'negative', message: 'Please fill all required fields', icon: 'warning' })
+    return
+  }
+  await handleSaveAddon()
+}
+
+const handleSaveAddon = async () => {
+  try {
+    if (editingAddon.value) {
+      await addonStore.updateAddon(editingAddon.value.id, { ...addonForm })
+      $q.notify({ color: 'positive', message: 'Add-on updated', icon: 'check' })
+    } else {
+      await addonStore.addAddon({ ...addonForm })
+      $q.notify({ color: 'positive', message: 'Add-on added', icon: 'add' })
+    }
+    closeAddonDialog()
+  } catch (e) {
+    console.error(e)
+    $q.notify({ color: 'negative', message: 'Error saving add-on', icon: 'report_problem' })
+  }
+}
+
+const confirmDeleteAddon = (addon) => {
+  $q.dialog({
+    title: 'Delete Add-on',
+    message: `Remove ${addon.name}?`,
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    try {
+      await addonStore.deleteAddon(addon.id)
+      $q.notify({ color: 'positive', message: 'Add-on deleted', icon: 'delete' })
+    } catch {
+      $q.notify({ color: 'negative', message: 'Error deleting add-on', icon: 'report_problem' })
+    }
+  })
+}
+
+const closeAddonDialog = () => {
+  showAddAddonDialog.value = false
+  editingAddon.value = null
+  Object.assign(addonForm, {
+    name: '',
+    category: '',
+    price: 0,
+    stock: null,
+    status: 'Available'
+  })
 }
 
 const confirmDelete = (product) => {
