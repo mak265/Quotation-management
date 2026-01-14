@@ -35,7 +35,7 @@ const props = defineProps({
 
 useSlots()
 
-// Helper to ensure valid class construction
+// Helper to ensure valid Quasar class construction
 const textColorClass = computed(() => {
   return props.textColor ? `text-${props.textColor}` : 'text-white'
 })
