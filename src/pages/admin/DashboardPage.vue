@@ -555,7 +555,7 @@ const yAxisLabels = computed(() => {
   if (chartData.value.length === 0) return []
 
   const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 100)
-  const minAmount = 0 
+  const minAmount = 0
 
   const range = maxAmount - minAmount
   const step = range / 4
@@ -576,7 +576,7 @@ const lineChartPoints = computed(() => {
   const minAmount = 0
   const range = maxAmount - minAmount
 
-  const containerWidth = 100 
+  const containerWidth = 100
   const pointSpacing = containerWidth / (chartData.value.length - 1 || 1)
 
   return chartData.value.map((item, index) => {
@@ -650,17 +650,17 @@ const buildDailyData = (orders, days, offsetDays) => {
 const buildMonthlyData = (orders, months) => {
     const data = []
     const today = new Date()
-    
+
     for (let i = months - 1; i >= 0; i--) {
         const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
         const monthLabel = d.toLocaleString('default', { month: 'short' })
-        const key = `${d.getFullYear()}-${d.getMonth()}` 
-        
-        data.push({ 
-            label: monthLabel, 
-            key: key, 
-            amount: 0, 
-            orders: 0 
+        const key = `${d.getFullYear()}-${d.getMonth()}`
+
+        data.push({
+            label: monthLabel,
+            key: key,
+            amount: 0,
+            orders: 0
         })
     }
 
@@ -673,7 +673,7 @@ const buildMonthlyData = (orders, months) => {
             bucket.orders += 1
         }
     })
-    
+
     return data.map((x) => ({ ...x, amount: Math.round(x.amount * 100) / 100 }))
 }
 
@@ -780,7 +780,7 @@ const orderTotal = (order) => {
 }
 
 const refreshData = async () => {
-  await orderStore.fetchOrders() 
+  await orderStore.fetchOrders()
   loadChartData()
 }
 
@@ -806,7 +806,7 @@ onMounted(async () => {
   await Promise.all([orderStore.fetchOrders(), productStore.fetchProducts()])
 
   const orders = orderStore.orders || []
-  todayOrders.value = orders.length 
+  todayOrders.value = orders.length
   todaySales.value = orders.reduce((s, o) => s + Number(o.total || o.totalAmount || 0), 0)
   lowStockItems.value = productStore.products.filter((p) => (p.stock ?? 0) <= 5).length
 
