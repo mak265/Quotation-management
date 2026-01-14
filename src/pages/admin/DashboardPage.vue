@@ -1,23 +1,21 @@
 <template>
-  <!-- Template remains exactly the same -->
   <q-page padding class="bg-app">
     <div class="row q-col-gutter-md">
-      <!-- Header -->
       <div class="col-12">
-        <q-card class="glass-card chart-card">
+        <q-card class="glass-card header-card">
           <q-card-section class="row items-center justify-between dashboard-hero">
             <div>
-              <div class="text-h5 gradient-text">Coffee Shop Dashboard</div>
-              <div class="text-subtitle2 text-grey-7">
+              <div class="text-h5 text-weight-bold gradient-text">Coffee Shop Dashboard</div>
+              <div class="text-subtitle2 text-grey-8">
                 Good {{ timeGreeting }}, Admin! Here's your business overview
               </div>
             </div>
 
             <div class="row q-gutter-sm">
-              <q-btn color="primary" icon="refresh" @click="refreshData" round>
+              <q-btn flat color="primary" icon="refresh" @click="refreshData" round dense>
                 <q-tooltip>Refresh Data</q-tooltip>
               </q-btn>
-              <q-btn-dropdown color="primary" icon="cloud_download" label="Export" outline>
+              <q-btn-dropdown color="primary" icon="cloud_download" label="Export" flat dense no-caps>
                 <q-list>
                   <q-item clickable v-close-popup @click="openExportDialog">
                     <q-item-section avatar>
@@ -39,25 +37,24 @@
                   </q-item>
                 </q-list>
               </q-btn-dropdown>
-              <q-btn class="btn-secondary" icon="logout" label="Logout" no-caps @click="logout" />
+              <q-btn color="grey-9" flat icon="logout" label="Logout" no-caps @click="logout" dense />
             </div>
           </q-card-section>
         </q-card>
       </div>
 
-      <!-- Key Metrics -->
       <div class="col-12 col-md-3">
-        <q-card class="bg-primary text-white glass-card metric-card">
+        <q-card class="text-white glass-card metric-card bg-gradient-primary">
           <q-card-section>
-            <div class="row items-center">
-              <div class="col">
-                <div class="text-h4 metric-value">{{ formatCurrency(todaySales) }}</div>
-                <div class="text-subtitle2">Today's Sales</div>
+            <div class="row items-start justify-between">
+              <div>
+                <div class="text-subtitle2 text-blue-1">Today's Sales</div>
+                <div class="text-h5 text-weight-bold q-mt-sm">{{ formatCurrency(todaySales) }}</div>
               </div>
-              <div class="col-auto"><q-icon name="attach_money" size="48px" /></div>
+              <q-icon name="payments" size="20px" class="opacity-50" />
             </div>
-            <q-linear-progress :value="salesProgress" color="white" class="q-mt-sm" size="10px" />
-            <div class="text-caption q-mt-xs">
+            <div class="text-caption q-mt-md text-blue-1">
+              <q-icon :name="salesComparison >= 0 ? 'trending_up' : 'trending_down'" />
               {{ salesComparison > 0 ? '+' : '' }}{{ salesComparison }}% vs yesterday
             </div>
           </q-card-section>
@@ -65,17 +62,16 @@
       </div>
 
       <div class="col-12 col-md-3">
-        <q-card class="bg-positive text-white glass-card metric-card">
+        <q-card class="text-white glass-card metric-card bg-gradient-success">
           <q-card-section>
-            <div class="row items-center">
-              <div class="col">
-                <div class="text-h4 metric-value">{{ todayOrders }}</div>
-                <div class="text-subtitle2">Orders Today</div>
+            <div class="row items-start justify-between">
+              <div>
+                <div class="text-subtitle2 text-green-1">Orders Today</div>
+                <div class="text-h5 text-weight-bold q-mt-sm">{{ todayOrders }}</div>
               </div>
-              <div class="col-auto"><q-icon name="shopping_cart" size="48px" /></div>
+              <q-icon name="shopping_bag" size="20px" class="opacity-50" />
             </div>
-            <q-linear-progress :value="ordersProgress" color="white" class="q-mt-sm" size="10px" />
-            <div class="text-caption q-mt-xs">
+            <div class="text-caption q-mt-md text-green-1">
               Avg. {{ formatCurrency(averageOrderValue) }} per order
             </div>
           </q-card-section>
@@ -83,70 +79,71 @@
       </div>
 
       <div class="col-12 col-md-3">
-        <q-card class="bg-warning text-white glass-card metric-card">
+        <q-card class="text-white glass-card metric-card bg-gradient-warning">
           <q-card-section>
-            <div class="row items-center">
-              <div class="col">
-                <div class="text-h4 metric-value">{{ lowStockItems }}</div>
-                <div class="text-subtitle2">Low Stock Items</div>
+            <div class="row items-start justify-between">
+              <div>
+                <div class="text-subtitle2 text-orange-1">Low Stock Items</div>
+                <div class="text-h5 text-weight-bold q-mt-sm">{{ lowStockItems }}</div>
               </div>
-              <div class="col-auto"><q-icon name="warning" size="48px" /></div>
+              <q-icon name="inventory_2" size="20px" class="opacity-50" />
             </div>
-            <div class="text-caption q-mt-xs">{{ criticalStockItems }} items critical</div>
+            <div class="text-caption q-mt-md text-orange-1">
+              {{ criticalStockItems }} items critical
+            </div>
           </q-card-section>
         </q-card>
       </div>
 
       <div class="col-12 col-md-3">
-        <q-card class="bg-info text-white glass-card metric-card">
+        <q-card class="text-white glass-card metric-card bg-gradient-info">
           <q-card-section>
-            <div class="row items-center">
-              <div class="col">
-                <div class="text-h4 metric-value">{{ activeTables }}</div>
-                <div class="text-subtitle2">Active Tables</div>
+            <div class="row items-start justify-between">
+              <div>
+                <div class="text-subtitle2 text-cyan-1">Active Tables</div>
+                <div class="text-h5 text-weight-bold q-mt-sm">{{ activeTables }}</div>
               </div>
-              <div class="col-auto"><q-icon name="table_restaurant" size="48px" /></div>
+              <q-icon name="table_restaurant" size="20px" class="opacity-50" />
             </div>
-            <div class="text-caption q-mt-xs">
+            <div class="text-caption q-mt-md text-cyan-1">
               {{ occupiedTables }} of {{ totalTables }} occupied
             </div>
           </q-card-section>
         </q-card>
       </div>
 
-      <!-- Main Content Area -->
       <div class="col-12 col-md-8">
-        <!-- Enhanced Daily Sales Overview with Graph -->
-        <q-card class="q-mb-md glass-card chart-card">
+        <q-card class="glass-card chart-card">
           <q-card-section>
             <div class="row items-center justify-between">
               <div>
-                <div class="text-h6">Sales Performance</div>
-                <div class="text-subtitle2 text-grey-7">
+                <div class="text-h6 text-weight-bold">Sales Performance</div>
+                <div class="text-caption text-grey-7">
                   {{ selectedPeriod.label }} performance metrics
                 </div>
               </div>
 
               <div class="row items-center q-gutter-sm">
-                <!-- Period Selector -->
-                <q-btn-group push>
+                <q-btn-group unelevated class="period-selector">
                   <q-btn
                     v-for="period in timePeriods"
                     :key="period.value"
                     :label="period.label"
-                    :outline="selectedPeriod.value !== period.value"
-                    :color="selectedPeriod.value === period.value ? 'primary' : 'grey-6'"
+                    :color="selectedPeriod.value === period.value ? 'primary' : 'grey-2'"
+                    :text-color="selectedPeriod.value === period.value ? 'white' : 'grey-8'"
                     @click="changePeriod(period)"
                     size="sm"
+                    padding="xs md"
                   />
                 </q-btn-group>
 
-                <!-- Chart Type Selector -->
                 <q-btn-dropdown
                   :label="chartTypes.find((t) => t.value === chartType).label"
-                  outline
+                  flat
+                  dense
+                  no-caps
                   size="sm"
-                  color="primary"
+                  color="grey-8"
                 >
                   <q-list>
                     <q-item
@@ -157,7 +154,7 @@
                       @click="chartType = type.value"
                     >
                       <q-item-section avatar>
-                        <q-icon :name="type.icon" />
+                        <q-icon :name="type.icon" size="xs" />
                       </q-item-section>
                       <q-item-section>{{ type.label }}</q-item-section>
                     </q-item>
@@ -167,46 +164,56 @@
             </div>
           </q-card-section>
 
-          <q-separator />
+          <q-separator color="grey-2" />
 
           <q-card-section>
-            <!-- Summary Stats -->
-            <div class="row q-col-gutter-md q-mb-lg">
+            <div class="row q-col-gutter-sm q-mb-md justify-center">
               <div class="col-6 col-md-3">
-                <div class="text-center">
-                  <div class="text-h6 gradient-text">
+                <div class="text-center q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-subtitle1 text-primary text-weight-bolder">
                     {{ formatCurrency(periodStats.totalSales) }}
                   </div>
-                  <div class="text-caption text-grey-7">Total Sales</div>
-                </div>
-              </div>
-              <div class="col-6 col-md-3">
-                <div class="text-center">
-                  <div class="text-h6 gradient-text">{{ periodStats.totalOrders }}</div>
-                  <div class="text-caption text-grey-7">Total Orders</div>
-                </div>
-              </div>
-              <div class="col-6 col-md-3">
-                <div class="text-center">
-                  <div class="text-h6 gradient-text">
-                    {{ formatCurrency(periodStats.avgOrderValue) }}
+                  <div class="text-caption text-grey-7" style="font-size: 0.7rem; line-height: 1;">
+                    Sales
                   </div>
-                  <div class="text-caption text-grey-7">Avg Order Value</div>
                 </div>
               </div>
+
               <div class="col-6 col-md-3">
-                <div class="text-center">
-                  <div class="text-h6 gradient-text">
+                <div class="text-center q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-subtitle1 text-primary text-weight-bolder">
+                    {{ periodStats.totalOrders }}
+                  </div>
+                  <div class="text-caption text-grey-7" style="font-size: 0.7rem; line-height: 1;">
+                    Orders
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <div class="text-center q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-subtitle1 text-primary text-weight-bolder">
+                    {{ formatCurrency(periodStats.avgOrderValue, true) }}
+                  </div>
+                  <div class="text-caption text-grey-7" style="font-size: 0.7rem; line-height: 1;">
+                    Avg. Value
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <div class="text-center q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-subtitle1 text-positive text-weight-bolder">
                     {{ periodStats.growth >= 0 ? '+' : '' }}{{ periodStats.growth }}%
                   </div>
-                  <div class="text-caption text-grey-7">Growth</div>
+                  <div class="text-caption text-grey-7" style="font-size: 0.7rem; line-height: 1;">
+                    Growth
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Chart Area -->
-            <div style="height: 300px">
-              <!-- Bar Chart -->
+            <div style="height: 300px" class="q-px-sm">
               <div v-if="chartType === 'bar'" style="height: 100%">
                 <div class="row items-end" style="height: 85%">
                   <div
@@ -217,11 +224,12 @@
                   >
                     <div class="flex column items-center justify-end" style="height: 100%">
                       <div
-                        class="chart-bar q-mx-xs"
+                        class="chart-bar q-mx-xs shadow-1"
                         :style="{
                           height: `${getChartBarHeight(data.amount)}%`,
-                          width: '70%',
-                          'background-color': isCurrentPeriod(data) ? '#1976D2' : '#90CAF9',
+                          width: '60%',
+                          'background': isLastBar(index) ? 'linear-gradient(to top, #1976D2, #64B5F6)' : '#E3F2FD',
+                          'border-radius': '8px 8px 0 0'
                         }"
                         @mouseenter="hoveredData = data"
                         @mouseleave="hoveredData = null"
@@ -230,48 +238,38 @@
                           v-if="hoveredData === data"
                           anchor="top middle"
                           self="bottom middle"
+                          class="bg-grey-9 text-subtitle2"
                         >
                           <div class="text-bold">{{ data.label }}</div>
                           <div>Sales: {{ formatCurrency(data.amount) }}</div>
                           <div>Orders: {{ data.orders }}</div>
                         </q-tooltip>
                       </div>
-                      <div class="text-caption text-grey-7 q-mt-xs">{{ data.label }}</div>
+                      <div class="text-caption text-grey-6 q-mt-sm">{{ data.label }}</div>
                     </div>
-                  </div>
-                </div>
-                <q-separator class="q-mt-md" />
-                <div class="row q-mt-xs">
-                  <div class="col text-center">
-                    <div class="text-caption text-grey-7">Sales Amount</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Line Chart -->
               <div v-if="chartType === 'line'" style="height: 100%">
                 <div class="relative-position" style="height: 100%">
-                  <!-- Grid Lines -->
                   <div class="absolute-full column justify-between">
-                    <q-separator v-for="n in 5" :key="n" />
+                    <q-separator v-for="n in 5" :key="n" color="grey-2" />
                   </div>
 
-                  <!-- Y-axis labels -->
                   <div class="absolute" style="left: 0; top: 0; bottom: 0; width: 50px">
                     <div
                       v-for="(label, index) in yAxisLabels"
                       :key="index"
-                      class="absolute text-caption text-grey-7"
+                      class="absolute text-caption text-grey-5"
                       :style="{ top: `${index * 25}%` }"
                     >
-                      {{ formatCurrency(label) }}
+                      {{ formatCurrency(label, true) }}
                     </div>
                   </div>
 
-                  <!-- Line Chart -->
                   <div class="absolute" style="left: 60px; right: 0; top: 0; bottom: 0">
                     <svg width="100%" height="100%" style="overflow: visible">
-                      <!-- Line path -->
                       <path
                         :d="getLinePath()"
                         fill="none"
@@ -279,72 +277,66 @@
                         stroke-width="3"
                         stroke-linecap="round"
                         stroke-linejoin="round"
+                        class="chart-path"
                       />
-
-                      <!-- Data points -->
                       <circle
                         v-for="(point, index) in lineChartPoints"
                         :key="index"
                         :cx="point.x"
                         :cy="point.y"
-                        r="4"
-                        fill="#1976D2"
-                        stroke="white"
-                        stroke-width="2"
+                        r="5"
+                        fill="white"
+                        stroke="#1976D2"
+                        stroke-width="2.5"
                         @mouseenter="hoveredData = chartData[index]"
                         @mouseleave="hoveredData = null"
-                      >
-                        <title>
-                          {{ chartData[index].label }}:
-                          {{ formatCurrency(chartData[index].amount) }}
-                        </title>
-                      </circle>
+                        style="cursor: pointer"
+                      />
                     </svg>
                   </div>
 
-                  <!-- X-axis labels -->
                   <div class="absolute" style="left: 60px; right: 0; bottom: 0">
                     <div class="row">
                       <div v-for="(data, index) in chartData" :key="index" class="col text-center">
-                        <div class="text-caption text-grey-7">{{ data.label }}</div>
+                        <div class="text-caption text-grey-6">{{ data.label }}</div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Area Chart -->
               <div v-if="chartType === 'area'" style="height: 100%">
                 <div class="relative-position" style="height: 100%">
-                  <!-- Grid Lines -->
                   <div class="absolute-full column justify-between">
-                    <q-separator v-for="n in 5" :key="n" />
+                    <q-separator v-for="n in 5" :key="n" color="grey-2" />
                   </div>
 
-                  <!-- Y-axis labels -->
                   <div class="absolute" style="left: 0; top: 0; bottom: 0; width: 50px">
                     <div
                       v-for="(label, index) in yAxisLabels"
                       :key="index"
-                      class="absolute text-caption text-grey-7"
+                      class="absolute text-caption text-grey-5"
                       :style="{ top: `${index * 25}%` }"
                     >
-                      {{ formatCurrency(label) }}
+                      {{ formatCurrency(label, true) }}
                     </div>
                   </div>
 
-                  <!-- Area Chart -->
                   <div class="absolute" style="left: 60px; right: 0; top: 0; bottom: 0">
                     <svg width="100%" height="100%" style="overflow: visible">
-                      <!-- Area path -->
+                      <defs>
+                        <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stop-color="#1976D2" stop-opacity="0.3" />
+                          <stop offset="100%" stop-color="#1976D2" stop-opacity="0" />
+                        </linearGradient>
+                      </defs>
                       <path
                         :d="getAreaPath()"
-                        fill="rgba(25, 118, 210, 0.2)"
+                        fill="url(#areaGradient)"
                         stroke="#1976D2"
                         stroke-width="2"
+                        class="chart-area"
                       />
-
-                      <!-- Data points -->
                       <circle
                         v-for="(point, index) in lineChartPoints"
                         :key="index"
@@ -358,113 +350,45 @@
                     </svg>
                   </div>
 
-                  <!-- X-axis labels -->
                   <div class="absolute" style="left: 60px; right: 0; bottom: 0">
                     <div class="row">
                       <div v-for="(data, index) in chartData" :key="index" class="col text-center">
-                        <div class="text-caption text-grey-7">{{ data.label }}</div>
+                        <div class="text-caption text-grey-6">{{ data.label }}</div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <!-- Legend -->
-            <div class="row justify-center q-mt-md">
-              <div class="col-auto">
-                <div class="row items-center q-gutter-md">
-                  <div class="row items-center">
-                    <div class="legend-color q-mr-xs" style="background-color: #1976d2"></div>
-                    <div class="text-caption">Current Period</div>
-                  </div>
-                  <div class="row items-center">
-                    <div class="legend-color q-mr-xs" style="background-color: #90caf9"></div>
-                    <div class="text-caption">Previous Period</div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </q-card-section>
 
-          <q-separator />
-
-          <q-card-actions align="right">
+          <q-card-actions align="right" class="q-pa-md">
             <q-btn
               flat
               color="primary"
-              icon="insights"
               label="Detailed Analytics"
+              icon-right="arrow_forward"
               to="/analytics"
+              no-caps
             />
           </q-card-actions>
         </q-card>
-
-        <!-- Removed static Top Selling Items section -->
       </div>
 
-      <!-- Sidebar -->
       <div class="col-12 col-md-4">
-        <!-- Quick Actions -->
-        <q-card class="q-mb-md glass-card">
+        <q-card class="glass-card full-height">
           <q-card-section>
-            <div class="text-h6">Quick Actions</div>
+            <div class="text-h6 text-weight-bold">Recent Orders</div>
+            <div class="text-caption text-grey-7">Last 5 transactions</div>
           </q-card-section>
 
           <q-list separator>
-            <q-item clickable to="/pos" class="text-primary">
+            <q-item v-for="order in recentOrders" :key="order.id" class="q-py-md">
               <q-item-section avatar>
-                <q-icon name="point_of_sale" color="primary" />
+                 <q-avatar color="blue-1" text-color="primary" icon="receipt_long" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Open POS</q-item-label>
-                <q-item-label caption>Start new transaction</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable to="/inventory" class="text-positive">
-              <q-item-section avatar>
-                <q-icon name="inventory" color="positive" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>Manage Inventory</q-item-label>
-                <q-item-label caption>{{ lowStockItems }} items need attention</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable to="/ordering" class="text-warning">
-              <q-item-section avatar>
-                <q-icon name="local_shipping" color="warning" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>Place Order</q-item-label>
-                <q-item-label caption>Restock supplies</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable to="/reports" class="text-info">
-              <q-item-section avatar>
-                <q-icon name="assessment" color="info" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>View Reports</q-item-label>
-                <q-item-label caption>Sales & analytics</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
-
-        <!-- Recent Orders -->
-        <q-card class="glass-card">
-          <q-card-section>
-            <div class="text-h6">Recent Orders</div>
-            <div class="text-subtitle2 text-grey-7">Last 5 transactions</div>
-          </q-card-section>
-
-          <q-list bordered separator>
-            <q-item v-for="order in recentOrders" :key="order.id">
-              <q-item-section>
-                <q-item-label>Order #{{ order.id }}</q-item-label>
+                <q-item-label class="text-weight-bold">Order #{{ order.id }}</q-item-label>
                 <q-item-label caption>
                   {{ formatTime(order.createdAt || order.time || order.date) }} • {{ order.itemCount || (Array.isArray(order.items) ? order.items.length : 0) }} items
                 </q-item-label>
@@ -472,32 +396,29 @@
 
               <q-item-section side>
                 <div class="text-right">
-                  <div class="text-subtitle2">{{ formatCurrency(orderTotal(order)) }}</div>
-                  <q-badge :color="getOrderStatusColor(order.status)" :label="order.status" />
+                  <div class="text-subtitle2 text-weight-bold">{{ formatCurrency(orderTotal(order)) }}</div>
+                  <q-badge :color="getOrderStatusColor(order.status)" :label="order.status" outline class="q-mt-xs" />
                 </div>
               </q-item-section>
             </q-item>
           </q-list>
 
-          <q-card-actions align="right">
-            <q-btn flat color="primary" label="View All" to="/orders" />
+          <q-card-actions align="center" class="q-pa-md">
+            <q-btn outline color="primary" label="View All Orders" to="/orders" class="full-width" no-caps />
           </q-card-actions>
         </q-card>
       </div>
-
-      <!-- Removed static Inventory Alerts section -->
     </div>
 
-    <!-- Export Dialog -->
     <q-dialog v-model="showExportDialog">
-      <q-card style="min-width: 350px">
+      <q-card style="min-width: 350px" class="glass-card">
         <q-card-section>
           <div class="text-h6">Export Sales Report</div>
-          <div class="text-caption">Select date range for export</div>
+          <div class="text-caption text-grey-7">Select date range for export</div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-date v-model="exportDateRange" range />
+          <q-date v-model="exportDateRange" range flat bordered class="full-width" />
 
           <div class="q-mt-md">
             <div class="text-subtitle2 q-mb-xs">Export Format</div>
@@ -511,20 +432,23 @@
 
           <div class="q-mt-md">
             <div class="text-subtitle2 q-mb-xs">Include Data</div>
-            <q-checkbox v-model="includeDetails" label="Order Details" />
-            <q-checkbox v-model="includeInventory" label="Inventory Levels" />
-            <q-checkbox v-model="includeAnalytics" label="Sales Analytics" />
+            <div class="column">
+              <q-checkbox v-model="includeDetails" label="Order Details" dense />
+              <q-checkbox v-model="includeInventory" label="Inventory Levels" dense />
+              <q-checkbox v-model="includeAnalytics" label="Sales Analytics" dense />
+            </div>
           </div>
         </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" v-close-popup />
+        <q-card-actions align="right" class="q-pa-md bg-grey-1">
+          <q-btn flat label="Cancel" color="grey-8" v-close-popup no-caps />
           <q-btn
             unelevated
             label="Export Report"
             color="primary"
             icon="download"
             @click="executeExportCSV"
+            no-caps
           />
         </q-card-actions>
       </q-card>
@@ -533,30 +457,27 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { signOut } from 'firebase/auth'
 import { auth } from 'src/services/firebase'
 import { useOrderStore } from 'src/stores/orderStore'
 import { useProductStore } from 'src/stores/productStore'
 
-// --- Chart Configuration ---
-const selectedPeriod = ref({ label: '7 Days', value: '7days' })
+const selectedPeriod = ref({ label: '7 Days', value: '7days', type: 'daily', days: 7 })
 const chartType = ref('bar')
 const hoveredData = ref(null)
 
 const timePeriods = ref([
-  { label: '7 Days', value: '7days', days: 7 },
-  { label: '30 Days', value: '30days', days: 30 },
-  { label: '3 Months', value: '3months', days: 90 },
-  { label: '6 Months', value: '6months', days: 180 },
-  { label: '1 Year', value: '1year', days: 365 },
+  { label: '7 Days', value: '7days', type: 'daily', days: 7 },
+  { label: 'Monthly', value: 'monthly', type: 'monthly', months: 12 },
+  { label: 'Yearly', value: 'yearly', type: 'yearly', years: 5 },
 ])
 
 const chartTypes = ref([
-  { label: 'Bar Chart', value: 'bar', icon: 'bar_chart' },
-  { label: 'Line Chart', value: 'line', icon: 'show_chart' },
-  { label: 'Area Chart', value: 'area', icon: 'area_chart' },
+  { label: 'Bar', value: 'bar', icon: 'bar_chart' },
+  { label: 'Line', value: 'line', icon: 'show_chart' },
+  { label: 'Area', value: 'area', icon: 'area_chart' },
 ])
 
 const orderStore = useOrderStore()
@@ -573,14 +494,13 @@ const recentOrders = computed(() => {
   const list = orderStore.orders || []
   return [...list]
     .sort((a, b) => {
-      const da = a.createdAt && typeof a.createdAt.toDate === 'function' ? a.createdAt.toDate() : new Date(a.createdAt || a.date || 0)
-      const db = b.createdAt && typeof b.createdAt.toDate === 'function' ? b.createdAt.toDate() : new Date(b.createdAt || b.date || 0)
+      const da = getDateFromOrder(a)
+      const db = getDateFromOrder(b)
       return db - da
     })
     .slice(0, 5)
 })
 
-// Export State
 const showExportDialog = ref(false)
 const exportDateRange = ref({ from: '2024-01-01', to: '2024-01-07' })
 const exportFormat = ref('csv')
@@ -593,28 +513,14 @@ const formatOptions = [
   { label: 'PDF', value: 'pdf' },
 ]
 
-// --- Chart Data ---
 const chartData = ref([])
 const previousPeriodData = ref([])
 
-// --- Computed Properties ---
 const timeGreeting = computed(() => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Morning'
   if (hour < 18) return 'Afternoon'
   return 'Evening'
-})
-
-const salesProgress = computed(() => {
-  const maxSales = Math.max(...chartData.value.map((d) => d.amount), 1)
-  const last = chartData.value[chartData.value.length - 1]?.amount || 0
-  return last / maxSales
-})
-
-const ordersProgress = computed(() => {
-  const maxOrders = Math.max(...chartData.value.map((d) => d.orders), 1)
-  const last = chartData.value[chartData.value.length - 1]?.orders || 0
-  return last / maxOrders
 })
 
 const salesComparison = computed(() => {
@@ -634,8 +540,6 @@ const periodStats = computed(() => {
   const totalSales = chartData.value.reduce((sum, item) => sum + item.amount, 0)
   const totalOrders = chartData.value.reduce((sum, item) => sum + item.orders, 0)
   const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0
-
-  // Calculate growth compared to previous period
   const prevTotalSales = previousPeriodData.value.reduce((sum, item) => sum + item.amount, 0)
   const growth = prevTotalSales > 0 ? ((totalSales - prevTotalSales) / prevTotalSales) * 100 : 0
 
@@ -650,8 +554,8 @@ const periodStats = computed(() => {
 const yAxisLabels = computed(() => {
   if (chartData.value.length === 0) return []
 
-  const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 100) // Default min 100
-  const minAmount = 0 // Anchor to 0 for better visuals
+  const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 100)
+  const minAmount = 0 
 
   const range = maxAmount - minAmount
   const step = range / 4
@@ -668,67 +572,69 @@ const yAxisLabels = computed(() => {
 const lineChartPoints = computed(() => {
   if (chartData.value.length === 0) return []
 
-  const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 10) // Prevent div by zero
+  const maxAmount = Math.max(...chartData.value.map((d) => d.amount), 10)
   const minAmount = 0
   const range = maxAmount - minAmount
 
-  const containerWidth = 100 // percentage
+  const containerWidth = 100 
   const pointSpacing = containerWidth / (chartData.value.length - 1 || 1)
 
   return chartData.value.map((item, index) => {
     const x = index * pointSpacing
-    // In SVG, 0 is top, 100 is bottom. So we invert the value.
     const y = 100 - ((item.amount - minAmount) / range) * 100
     return { x: `${x}%`, y: `${y}%` }
   })
 })
 
-// --- Methods ---
 const changePeriod = (period) => {
   selectedPeriod.value = period
   loadChartData()
 }
 
-const loadChartData = () => {
-  const period = timePeriods.value.find((p) => p.value === selectedPeriod.value.value)
-  const days = period.days
-  chartData.value = buildChartData(days, 0)
-  previousPeriodData.value = buildChartData(days, days)
+const getDateFromOrder = (o) => {
+  if (o.createdAt && typeof o.createdAt.toDate === 'function') {
+    return o.createdAt.toDate()
+  } else if (o.date) {
+    return new Date(o.date)
+  }
+  return new Date()
 }
 
-const buildChartData = (days, offsetDays) => {
+const loadChartData = () => {
+  const period = timePeriods.value.find((p) => p.value === selectedPeriod.value.value)
+  const orders = orderStore.orders || []
+
+  if (period.type === 'daily') {
+    chartData.value = buildDailyData(orders, period.days, 0)
+    previousPeriodData.value = buildDailyData(orders, period.days, period.days)
+  } else if (period.type === 'monthly') {
+    chartData.value = buildMonthlyData(orders, period.months)
+    previousPeriodData.value = []
+  } else if (period.type === 'yearly') {
+    chartData.value = buildYearlyData(orders, period.years)
+    previousPeriodData.value = []
+  }
+}
+
+const buildDailyData = (orders, days, offsetDays) => {
   const data = []
   const today = new Date()
-  today.setHours(0, 0, 0, 0) // Normalize today
+  today.setHours(0, 0, 0, 0)
 
   const start = new Date(today)
   start.setDate(today.getDate() - (days + offsetDays - 1))
 
-  // Initialize data array with zeroed days
   for (let i = 0; i < days; i++) {
     const d = new Date(start)
     d.setDate(start.getDate() + i)
-    const label =
-      days <= 7
+    const label = days <= 7
         ? d.toLocaleDateString('en-US', { weekday: 'short' })
         : `${d.getMonth() + 1}/${d.getDate()}`
-    data.push({ date: d, label, amount: 0, orders: 0 })
+    data.push({ date: d, label, amount: 0, orders: 0, sortKey: d.getTime() })
   }
 
-  const orders = orderStore.orders || []
-
   orders.forEach((o) => {
-    // --- CRITICAL FIX: Handle Firebase Timestamps ---
-    let orderDate
-    if (o.createdAt && typeof o.createdAt.toDate === 'function') {
-      orderDate = o.createdAt.toDate() // It's a Firestore Timestamp
-    } else if (o.date) {
-      orderDate = new Date(o.date) // It's a standard Date string/object
-    } else {
-      return // No date found
-    }
-
-    // Check if order fits in the calculated range
+    const orderDate = getDateFromOrder(o)
     const diffTime = orderDate - start
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
@@ -739,6 +645,63 @@ const buildChartData = (days, offsetDays) => {
   })
 
   return data.map((x) => ({ ...x, amount: Math.round(x.amount * 100) / 100 }))
+}
+
+const buildMonthlyData = (orders, months) => {
+    const data = []
+    const today = new Date()
+    
+    for (let i = months - 1; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+        const monthLabel = d.toLocaleString('default', { month: 'short' })
+        const key = `${d.getFullYear()}-${d.getMonth()}` 
+        
+        data.push({ 
+            label: monthLabel, 
+            key: key, 
+            amount: 0, 
+            orders: 0 
+        })
+    }
+
+    orders.forEach(o => {
+        const date = getDateFromOrder(o)
+        const key = `${date.getFullYear()}-${date.getMonth()}`
+        const bucket = data.find(b => b.key === key)
+        if (bucket) {
+            bucket.amount += Number(o.total || o.totalAmount || 0)
+            bucket.orders += 1
+        }
+    })
+    
+    return data.map((x) => ({ ...x, amount: Math.round(x.amount * 100) / 100 }))
+}
+
+const buildYearlyData = (orders, years) => {
+    const data = []
+    const currentYear = new Date().getFullYear()
+
+    for (let i = years - 1; i >= 0; i--) {
+        const year = currentYear - i
+        data.push({
+            label: year.toString(),
+            key: year,
+            amount: 0,
+            orders: 0
+        })
+    }
+
+    orders.forEach(o => {
+        const date = getDateFromOrder(o)
+        const year = date.getFullYear()
+        const bucket = data.find(b => b.key === year)
+        if (bucket) {
+            bucket.amount += Number(o.total || o.totalAmount || 0)
+            bucket.orders += 1
+        }
+    })
+
+    return data.map((x) => ({ ...x, amount: Math.round(x.amount * 100) / 100 }))
 }
 
 const getChartBarHeight = (amount) => {
@@ -770,26 +733,23 @@ const getAreaPath = () => {
   return path
 }
 
-const isCurrentPeriod = (data) => {
-  if (!data.date) return true
-  const today = new Date()
-  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-  return data.date >= weekAgo
+const isLastBar = (index) => {
+  return index === chartData.value.length - 1
 }
 
-const formatCurrency = (amount) => {
-  if (isNaN(amount)) return '$0.00'
-  return new Intl.NumberFormat('en-US', {
+const formatCurrency = (amount, compact = false) => {
+  if (isNaN(amount)) return '₱0.00'
+  return new Intl.NumberFormat('en-PH', {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
+    currency: 'PHP',
+    minimumFractionDigits: compact ? 0 : 2,
     maximumFractionDigits: 2,
+    notation: compact ? 'compact' : 'standard'
   }).format(amount)
 }
 
 const formatTime = (dateInput) => {
   if (!dateInput) return ''
-  // Handle Firestore timestamp for display
   const date =
     dateInput && typeof dateInput.toDate === 'function' ? dateInput.toDate() : new Date(dateInput)
 
@@ -820,7 +780,7 @@ const orderTotal = (order) => {
 }
 
 const refreshData = async () => {
-  await orderStore.fetchOrders() // Re-fetch from Firebase
+  await orderStore.fetchOrders() 
   loadChartData()
 }
 
@@ -842,20 +802,11 @@ const logout = async () => {
   }
 }
 
-watch(chartType, (newType) => {
-  if ((newType === 'line' || newType === 'area') && selectedPeriod.value.value === '7days') {
-    // Optional: Switch to 30 days if lines look weird on 7 days
-    // selectedPeriod.value = timePeriods.value[1]
-    // loadChartData()
-  }
-})
-
 onMounted(async () => {
   await Promise.all([orderStore.fetchOrders(), productStore.fetchProducts()])
 
-  // Calculate top-level stats
   const orders = orderStore.orders || []
-  todayOrders.value = orders.length // Note: This counts ALL orders. You might want to filter for just today.
+  todayOrders.value = orders.length 
   todaySales.value = orders.reduce((s, o) => s + Number(o.total || o.totalAmount || 0), 0)
   lowStockItems.value = productStore.products.filter((p) => (p.stock ?? 0) <= 5).length
 
@@ -864,80 +815,84 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.sales-bar {
-  width: 100%;
-  border-radius: 4px;
-  transition: height 0.3s ease;
-}
-
-.alert-card {
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
   transition: all 0.3s ease;
 }
 
-.alert-card.unread {
-  border-left: 4px solid #ff6b6b;
-  background-color: rgba(255, 107, 107, 0.05);
-}
-
-.alert-card:hover {
+.glass-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
-.chart-bar {
-  border-radius: 4px 4px 0 0;
-  transition: all 0.3s ease;
-  cursor: pointer;
+.metric-card {
+  overflow: hidden;
   position: relative;
 }
 
-.chart-bar:hover {
-  transform: scaleY(1.05);
-  opacity: 0.9;
+.metric-card .q-card__section {
+    position: relative;
+    z-index: 2;
 }
 
-.legend-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
 }
 
-/* Custom tooltip styling */
-.q-tooltip {
-  font-size: 12px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.bg-gradient-success {
+  background: linear-gradient(135deg, #26a69a 0%, #00695c 100%);
 }
 
-/* Smooth transitions for chart switching */
-.chart-container {
-  transition: opacity 0.3s ease;
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #f2c037 0%, #e65100 100%);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .chart-bar {
-    width: 85% !important;
-  }
-
-  .time-period-selector .q-btn {
-    padding: 4px 8px;
-    font-size: 12px;
-  }
+.bg-gradient-info {
+  background: linear-gradient(135deg, #26c6da 0%, #0097a7 100%);
 }
 
-/* Animation for chart bars */
-@keyframes barGrow {
-  from {
-    height: 0;
-  }
-  to {
-    height: var(--target-height);
-  }
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, #1976d2, #26a69a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rounded-borders {
+  border-radius: 12px;
 }
 
 .chart-bar {
-  animation: barGrow 0.8s ease-out;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-bar:hover {
+  opacity: 0.8;
+  transform: scaleY(1.02);
+}
+
+.chart-path {
+  animation: draw 1.5s ease-out forwards;
+}
+
+.chart-area {
+  animation: fadeIn 1.5s ease-out forwards;
+}
+
+@keyframes draw {
+  from { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>
