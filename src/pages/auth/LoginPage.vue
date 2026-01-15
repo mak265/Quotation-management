@@ -10,6 +10,7 @@
               alt="System Logo"
               fit="contain"
               style="height: 100%; width: 100%"
+              @error="handleImageError"
             />
           </q-avatar>
 
@@ -98,17 +99,20 @@ const identifier = ref('')
 const password = ref('')
 const isPwdHidden = ref(true)
 const loading = ref(false)
+const imgError = ref(false)
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const usernamePattern = /^[a-zA-Z0-9_.]{3,30}$/
+const DEFAULT_FALLBACK = 'https://cdn.quasar.dev/logo-v2/svg/logo.svg'
 
 const displayLogo = computed(() => {
-  return (
-    systemStore.settings?.systemLogo ||
-    systemStore.settings?.defaultLogo ||
-    'https://cdn.quasar.dev/logo-v2/svg/logo.svg'
-  )
+  if (imgError.value) return DEFAULT_FALLBACK
+  return systemStore.settings?.systemLogo || systemStore.settings?.defaultLogo || DEFAULT_FALLBACK
 })
+
+const handleImageError = () => {
+  imgError.value = true
+}
 
 const systemName = computed(() => {
   return systemStore.settings?.systemName || 'POS System'
@@ -196,7 +200,7 @@ const onLoginSubmit = async () => {
       position: 'top',
     })
 
-    router.push('/ordering')
+    router.push('/dashboard')
   } catch (error) {
     console.error('Login Error:', error.code)
 

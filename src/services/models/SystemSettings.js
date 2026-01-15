@@ -17,14 +17,14 @@ export class SystemSettingsModel {
       createdAt instanceof Timestamp
         ? createdAt
         : createdAt
-        ? Timestamp.fromDate(new Date(createdAt))
-        : null
+          ? Timestamp.fromDate(new Date(createdAt))
+          : null
     this.updatedAt =
       updatedAt instanceof Timestamp
         ? updatedAt
         : updatedAt
-        ? Timestamp.fromDate(new Date(updatedAt))
-        : null
+          ? Timestamp.fromDate(new Date(updatedAt))
+          : null
   }
 
   toFirestore() {

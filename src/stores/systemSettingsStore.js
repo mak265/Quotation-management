@@ -32,12 +32,10 @@ export const useSystemSettingsStore = defineStore('systemSettings', {
         const settingsObj = new SystemSettingsModel(data)
 
         if (data.id) {
-          // Update existing
           const docRef = doc(db, 'systemSettings', data.id)
           await updateDoc(docRef, settingsObj.toFirestore())
           this.settings = settingsObj
         } else {
-          // Create new
           const docRef = await addDoc(collection(db, 'systemSettings'), settingsObj.toFirestore())
           this.settings = new SystemSettingsModel({ ...data, id: docRef.id })
         }

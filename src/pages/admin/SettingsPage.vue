@@ -1,111 +1,183 @@
 <template>
-  <q-page class="q-pa-md bg-grey-2">
-    <div class="row justify-center">
-      <div class="col-12 col-md-8" style="max-width: 900px">
-        
-        <div class="text-h5 text-weight-bold text-blue-grey-9 q-mb-md">
-          System Configuration
+  <q-page class="bg-blue-grey-1 flex flex-center no-scroll overflow-hidden">
+    <div class="column full-width q-px-md" style="max-width: 1000px; height: 70vh">
+      <div class="col-auto q-mb-sm">
+        <div class="row items-center">
+          <q-icon name="style" size="sm" color="primary" class="q-mr-xs" />
+          <div>
+            <div class="text-h5 text-weight-bolder text-blue-grey-10">System Branding</div>
+            <div class="text-caption text-grey-7">Manage your visual identity assets</div>
+          </div>
         </div>
+      </div>
 
-        <q-card class="shadow-2 rounded-xl bg-white q-pa-md">
-          
-          <div class="row q-col-gutter-lg">
-            
-            <div class="col-12 col-md-5 column items-center text-center">
-              <div class="text-subtitle1 text-weight-medium q-mb-sm text-grey-8">System Logo</div>
-              
-              <q-avatar size="150px" class="shadow-3 q-mb-md bg-grey-3">
-                <q-img 
-                  :src="previewImage || form.defaultLogo" 
-                  spinner-color="primary"
-                  style="height: 100%; width: 100%"
-                  fit="contain"
-                />
-                <q-btn
-                  round
-                  color="primary"
-                  icon="edit"
-                  size="sm"
-                  class="absolute-bottom-right"
-                  style="bottom: 10px; right: 10px"
-                  @click="$refs.fileInput.pickFiles()"
-                />
+      <div class="col row q-col-gutter-md overflow-hidden">
+        <div class="col-12 col-md-5 column">
+          <q-card class="col shadow-1 bg-white q-pa-md border-radius-lg column">
+            <div class="text-overline text-primary text-weight-bold q-mb-xs">Visual Assets</div>
+
+            <div
+              class="col upload-zone column items-center justify-center text-center cursor-pointer relative-position"
+              :class="{ 'is-dragging': draggingActive, 'is-invalid': invalidActive }"
+              @dragover.prevent="draggingActive = true"
+              @dragleave.prevent="draggingActive = false"
+              @drop.prevent="onDropActive"
+              @click="$refs.activeFileInput.pickFiles()"
+            >
+              <q-avatar size="110px" class="q-mb-sm shadow-1 bg-grey-1">
+                <q-img :src="previewActive || form.defaultLogo" fit="contain" />
               </q-avatar>
+              <div class="text-weight-bold text-blue-grey-9 text-caption">Active Logo</div>
 
-              <q-file
-                ref="fileInput"
-                v-model="logoFile"
-                accept=".jpg, .png, .jpeg"
-                style="display: none"
-                @update:model-value="handleFileSelect"
-              />
-
-              <div class="q-gutter-sm">
-                 <q-btn 
-                  flat 
-                  dense 
-                  color="negative" 
-                  label="Reset to Default" 
-                  size="sm" 
-                  icon="restart_alt"
-                  @click="resetLogo"
-                  v-if="form.systemLogo"
-                />
+              <div
+                class="row items-center justify-center text-grey-6 q-gutter-xs"
+                style="font-size: 10px"
+              >
+                <q-icon name="cloud_upload" size="14px" />
+                <span>Drag or Click to upload</span>
               </div>
-              
-              <div class="text-caption text-grey-6 q-mt-sm">
-                Recommended size: 500x500px <br> Max size: 2MB
+
+              <q-btn
+                v-if="form.systemLogo"
+                flat
+                round
+                color="negative"
+                icon="delete_outline"
+                size="sm"
+                class="absolute-top-right q-ma-xs z-top"
+                @click.stop="clearActiveLogo"
+              >
+                <q-tooltip>Remove custom logo</q-tooltip>
+              </q-btn>
+
+              <div
+                v-if="invalidActive"
+                class="absolute-full flex flex-center bg-red-1 text-negative text-caption text-weight-bold border-radius-md"
+              >
+                Invalid Format
               </div>
             </div>
 
-            <div class="col-12 col-md-7 column justify-center">
-              <div class="text-subtitle1 text-weight-medium q-mb-sm text-grey-8">General Information</div>
-              
-              <q-form @submit="onSubmit" class="q-gutter-y-md">
-                
+            <q-separator class="q-my-md" />
+
+            <div
+              class="col upload-zone column items-center justify-center text-center cursor-pointer relative-position"
+              :class="{ 'is-dragging': draggingDefault, 'is-invalid': invalidDefault }"
+              @dragover.prevent="draggingDefault = true"
+              @dragleave.prevent="draggingDefault = false"
+              @drop.prevent="onDropDefault"
+              @click="$refs.defaultFileInput.pickFiles()"
+            >
+              <q-avatar size="80px" class="q-mb-xs bg-grey-2 shadow-1">
+                <q-img
+                  :src="previewDefault || 'https://cdn.quasar.dev/logo-v2/svg/logo.svg'"
+                  fit="contain"
+                />
+              </q-avatar>
+              <div class="text-weight-bold text-blue-grey-9 text-caption">Fallback Default</div>
+
+              <div
+                class="row items-center justify-center text-grey-6 q-gutter-xs"
+                style="font-size: 10px"
+              >
+                <q-icon name="ads_click" size="14px" />
+                <span>Drag or Click to change</span>
+              </div>
+
+              <q-btn
+                v-if="previewDefaultUrl || form.defaultLogo"
+                flat
+                round
+                color="negative"
+                icon="delete_outline"
+                size="sm"
+                class="absolute-top-right q-ma-xs z-top"
+                @click.stop="clearDefaultLogo"
+              >
+                <q-tooltip>Reset to system default</q-tooltip>
+              </q-btn>
+
+              <div
+                v-if="invalidDefault"
+                class="absolute-full flex flex-center bg-red-1 text-negative text-caption text-weight-bold border-radius-md"
+              >
+                Invalid Format
+              </div>
+            </div>
+
+            <q-file
+              ref="activeFileInput"
+              v-model="activeFile"
+              class="hidden"
+              accept=".jpg, .jpeg, .png"
+              @update:model-value="handleActiveUpload"
+            />
+            <q-file
+              ref="defaultFileInput"
+              v-model="defaultFile"
+              class="hidden"
+              accept=".jpg, .jpeg, .png"
+              @update:model-value="handleDefaultUpload"
+            />
+          </q-card>
+        </div>
+
+        <div class="col-12 col-md-7 column">
+          <q-card class="col shadow-1 bg-white q-pa-lg border-radius-lg column">
+            <q-form @submit="onSubmit" class="column full-height">
+              <div class="text-overline text-primary text-weight-bold q-mb-sm">Information</div>
+
+              <div class="col q-gutter-y-md">
                 <q-input
                   v-model="form.systemName"
-                  label="System Name / Store Name"
+                  label="Display Name"
                   outlined
                   dense
-                  bg-color="grey-1"
-                  :rules="[val => !!val || 'System Name is required']"
+                  stack-label
+                  placeholder="Enter system or shop name"
+                  :rules="[(val) => !!val || 'Required']"
                 >
                   <template v-slot:prepend>
-                    <q-icon name="store" color="primary" />
+                    <q-icon name="badge" color="primary" size="xs" />
                   </template>
                 </q-input>
 
                 <q-input
                   v-model="form.defaultLogo"
-                  label="Default Logo Path"
+                  label="Asset Path Reference"
                   outlined
                   dense
+                  stack-label
                   readonly
-                  bg-color="grey-2"
-                  class="text-grey-7"
+                  bg-color="grey-1"
                 >
                   <template v-slot:prepend>
-                    <q-icon name="image" color="grey" />
+                    <q-icon name="link" color="grey" size="xs" />
                   </template>
                 </q-input>
 
-                <div class="row justify-end q-mt-lg">
-                  <q-btn 
-                    label="Save Changes" 
-                    type="submit" 
-                    color="primary" 
-                    icon="save" 
-                    unelevated
-                    class="full-width rounded-borders" 
-                    :loading="store.loading"
-                  />
+                <div class="info-banner q-pa-sm row no-wrap items-center">
+                  <q-icon name="info" color="blue-7" size="xs" class="q-mr-sm" />
+                  <div style="font-size: 11px" class="text-blue-grey-8">
+                    Custom logos are stored as base64 assets. We recommend using square images with
+                    transparent backgrounds (PNG) for better UI integration.
+                  </div>
                 </div>
+              </div>
 
-              </q-form>
-            </div>
-          </div>
-        </q-card>
+              <div class="row justify-end q-mt-auto">
+                <q-btn
+                  label="Save Changes"
+                  type="submit"
+                  color="primary"
+                  unelevated
+                  class="q-px-lg border-radius-md"
+                  :loading="store.loading"
+                />
+              </div>
+            </q-form>
+          </q-card>
+        </div>
       </div>
     </div>
   </q-page>
@@ -119,65 +191,134 @@ import { SystemSettingsModel } from 'src/services/models/SystemSettings.js'
 
 const $q = useQuasar()
 const store = useSystemSettingsStore()
-const fileInput = ref(null)
 
-// Local state for the form
 const form = reactive(new SystemSettingsModel())
-const logoFile = ref(null)
-const previewUrl = ref(null)
+const activeFile = ref(null)
+const defaultFile = ref(null)
+const previewActiveUrl = ref(null)
+const previewDefaultUrl = ref(null)
 
-// Computed for the image source
-const previewImage = computed(() => {
-  if (previewUrl.value) return previewUrl.value // Newly uploaded preview
-  if (form.systemLogo) return form.systemLogo   // Saved database logo
-  return null // Fallback to form.defaultLogo in template
-})
+const draggingActive = ref(false)
+const draggingDefault = ref(false)
+const invalidActive = ref(false)
+const invalidDefault = ref(false)
 
-const handleFileSelect = (file) => {
-  if (!file) return
+const previewActive = computed(() => previewActiveUrl.value || form.systemLogo)
+const previewDefault = computed(() => previewDefaultUrl.value || form.defaultLogo)
 
-  // Create local preview
-  previewUrl.value = URL.createObjectURL(file)
+const isValidFormat = (file) => {
+  if (!file) return true
+  const allowed = ['image/jpeg', 'image/jpg', 'image/png']
+  return allowed.includes(file.type)
+}
 
-  // Convert to Base64 for Firestore storage
+const triggerError = (type) => {
+  if (type === 'active') {
+    invalidActive.value = true
+    setTimeout(() => (invalidActive.value = false), 2000)
+  } else {
+    invalidDefault.value = true
+    setTimeout(() => (invalidDefault.value = false), 2000)
+  }
+}
+
+const processFile = (file, target) => {
+  if (!file || !isValidFormat(file)) {
+    triggerError(target)
+    return
+  }
+
+  const preview = URL.createObjectURL(file)
+  if (target === 'active') previewActiveUrl.value = preview
+  else previewDefaultUrl.value = preview
+
   const reader = new FileReader()
   reader.onload = (e) => {
-    form.systemLogo = e.target.result
+    if (target === 'active') form.systemLogo = e.target.result
+    else form.defaultLogo = e.target.result
   }
   reader.readAsDataURL(file)
 }
 
-const resetLogo = () => {
-  logoFile.value = null
-  previewUrl.value = null
-  form.systemLogo = null // This triggers the template to show defaultLogo
+const handleActiveUpload = (file) => processFile(file, 'active')
+const handleDefaultUpload = (file) => processFile(file, 'default')
+
+const onDropActive = (e) => {
+  draggingActive.value = false
+  const file = e.dataTransfer.files[0]
+  processFile(file, 'active')
+}
+
+const onDropDefault = (e) => {
+  draggingDefault.value = false
+  const file = e.dataTransfer.files[0]
+  processFile(file, 'default')
+}
+
+const clearActiveLogo = () => {
+  activeFile.value = null
+  previewActiveUrl.value = null
+  form.systemLogo = null
+}
+
+const clearDefaultLogo = () => {
+  defaultFile.value = null
+  previewDefaultUrl.value = null
+  form.defaultLogo = 'https://cdn.quasar.dev/logo-v2/svg/logo.svg' // Reset to factory default
 }
 
 const onSubmit = async () => {
-  await store.saveSettings({
-    id: form.id,
-    systemName: form.systemName,
-    systemLogo: form.systemLogo
-  })
-  
+  await store.saveSettings(form)
   $q.notify({
     type: 'positive',
     message: 'System settings updated successfully',
-    position: 'top'
+    position: 'top',
+    timeout: 1500,
   })
 }
 
 onMounted(async () => {
   await store.fetchSettings()
-  if (store.settings) {
-    // Populate form with store data
-    Object.assign(form, store.settings)
-  }
+  if (store.settings) Object.assign(form, store.settings)
 })
 </script>
 
 <style scoped>
-.rounded-xl {
-  border-radius: 16px;
+.no-scroll {
+  overflow: hidden !important;
+}
+.border-radius-lg {
+  border-radius: 12px;
+}
+.border-radius-md {
+  border-radius: 8px;
+}
+
+.upload-zone {
+  border: 1.5px dashed #cbd5e0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  background-color: #f8fafc;
+}
+
+.upload-zone:hover,
+.is-dragging {
+  border-color: var(--q-primary);
+  background-color: #ebf8ff;
+}
+
+.is-invalid {
+  border-color: var(--q-negative) !important;
+  background-color: #fff5f5 !important;
+}
+
+.info-banner {
+  background: #ebf4ff;
+  border-radius: 8px;
+  border: 1px solid #bee3f8;
+}
+
+.z-top {
+  z-index: 10;
 }
 </style>
