@@ -5,8 +5,8 @@ import { SystemSettingsModel } from 'src/services/models/SystemSettings.js'
 
 export const useSystemSettingsStore = defineStore('systemSettings', {
   state: () => ({
-    settings: null, // We usually only have 1 settings document
-    loading: false
+    settings: null,
+    loading: false,
   }),
 
   actions: {
@@ -15,11 +15,9 @@ export const useSystemSettingsStore = defineStore('systemSettings', {
       try {
         const querySnapshot = await getDocs(collection(db, 'systemSettings'))
         if (!querySnapshot.empty) {
-          // Take the first document found
           this.settings = SystemSettingsModel.fromFirestore(querySnapshot.docs[0])
         } else {
-            // Initialize empty if none exists
-           this.settings = new SystemSettingsModel() 
+          this.settings = new SystemSettingsModel()
         }
       } catch (error) {
         console.error(error)
@@ -32,7 +30,7 @@ export const useSystemSettingsStore = defineStore('systemSettings', {
       this.loading = true
       try {
         const settingsObj = new SystemSettingsModel(data)
-        
+
         if (data.id) {
           // Update existing
           const docRef = doc(db, 'systemSettings', data.id)
@@ -48,6 +46,6 @@ export const useSystemSettingsStore = defineStore('systemSettings', {
       } finally {
         this.loading = false
       }
-    }
-  }
+    },
+  },
 })
