@@ -51,6 +51,18 @@
                   emit-value
                 />
               </div>
+              <div class="col-12 col-md-4" v-if="selectedInventoryTab === 'products'">
+                <q-btn-toggle
+                  v-model="selectedProductView"
+                  spread
+                  toggle-color="primary"
+                  unelevated
+                  :options="[
+                    { label: 'Catalog', value: 'catalog', icon: 'grid_on' },
+                    { label: 'Table', value: 'table', icon: 'table_rows' },
+                  ]"
+                />
+              </div>
               <div class="col-12 col-md-4" v-if="selectedInventoryTab === 'addons'">
                 <q-select
                   v-model="selectedAddonAvailability"
@@ -110,7 +122,7 @@
               :loading="productStore.loading"
               flat
               bordered
-              v-if="selectedInventoryTab === 'products'"
+              v-if="selectedInventoryTab === 'products' && selectedProductView === 'table'"
             >
               <template v-slot:no-data="{ filter }">
                 <div class="full-width row flex-center q-gutter-sm q-pa-lg text-grey-8">
@@ -157,6 +169,74 @@
               </template>
             </q-table>
 
+            <div v-if="selectedInventoryTab === 'products' && selectedProductView === 'catalog'">
+              <div class="row q-col-gutter-md">
+                <div
+                  v-for="p in filteredProducts"
+                  :key="p.id"
+                  class="col-6 col-sm-4 col-md-3 col-lg-2"
+                >
+                  <q-card class="shadow-1 catalog-card">
+                    <q-img
+                      :src="p.productImage || placeholderImage"
+                      class="rounded-borders"
+                      style="height: 120px"
+                    >
+                      <template v-slot:error>
+                        <div class="absolute-full flex flex-center bg-grey-3 text-grey">
+                          <q-icon name="image_not_supported" />
+                        </div>
+                      </template>
+                    </q-img>
+                    <q-card-section>
+                      <div class="text-weight-bold text-grey-9">{{ p.productName }}</div>
+                      <div class="row items-center justify-between q-mt-xs">
+                        <q-chip dense color="grey-3" text-color="grey-8" v-if="p.productCategory">
+                          {{ p.productCategory }}
+                        </q-chip>
+                        <div class="text-weight-bold text-primary">
+                          ${{ Number(p.productPrice || 0).toFixed(2) }}
+                        </div>
+                      </div>
+                      <div class="q-mt-xs">
+                        <q-chip
+                          dense
+                          :color="
+                            Number(p.productStock) < 10
+                              ? 'negative'
+                              : Number(p.productStock) < 50
+                                ? 'warning'
+                                : 'positive'
+                          "
+                          text-color="white"
+                        >
+                          Stock: {{ p.productStock }}
+                        </q-chip>
+                      </div>
+                    </q-card-section>
+                    <q-card-actions align="right">
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="edit"
+                        color="primary"
+                        @click="openEditDialog(p)"
+                      />
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="delete"
+                        color="negative"
+                        @click="confirmDelete(p)"
+                      />
+                    </q-card-actions>
+                  </q-card>
+                </div>
+              </div>
+            </div>
+
             <q-table
               :rows="filteredAddons"
               :columns="addonColumns"
@@ -175,8 +255,22 @@
               </template>
               <template v-slot:body-cell-actions="props">
                 <q-td :props="props">
-                  <q-btn flat round dense icon="edit" color="primary" @click="openEditAddonDialog(props.row)" />
-                  <q-btn flat round dense icon="delete" color="negative" @click="confirmDeleteAddon(props.row)" />
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    icon="edit"
+                    color="primary"
+                    @click="openEditAddonDialog(props.row)"
+                  />
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    icon="delete"
+                    color="negative"
+                    @click="confirmDeleteAddon(props.row)"
+                  />
                 </q-td>
               </template>
               <template v-slot:no-data>
@@ -258,7 +352,13 @@
             />
             <div class="row q-col-gutter-sm items-center">
               <div class="col-12">
-                <q-file v-model="productImageFile" accept="image/*" outlined dense label="Product Image">
+                <q-file
+                  v-model="productImageFile"
+                  accept="image/*"
+                  outlined
+                  dense
+                  label="Product Image"
+                >
                   <template v-slot:prepend><q-icon name="image" /></template>
                   <template v-slot:append v-if="productImageFile">
                     <q-icon name="close" class="cursor-pointer" @click="clearImage" />
@@ -266,7 +366,7 @@
                 </q-file>
               </div>
               <div class="col-12" v-if="productImagePreview">
-                <q-img :src="productImagePreview" style="height: 140px" class="rounded-borders" />
+                <q-img :src="productImagePreview" style="height: 140%" class="rounded-borders" />
               </div>
             </div>
           </q-form>
@@ -323,12 +423,7 @@
           <div class="text-caption">Choose export format</div>
         </q-card-section>
         <q-card-section>
-          <q-option-group
-            v-model="exportFormat"
-            :options="formatOptions"
-            color="primary"
-            inline
-          />
+          <q-option-group v-model="exportFormat" :options="formatOptions" color="primary" inline />
           <q-separator spaced />
           <q-toggle v-model="exportUseTableFilters" label="Use current table filters" />
           <div v-if="!exportUseTableFilters" class="q-mt-md row q-col-gutter-sm">
@@ -368,16 +463,70 @@
         </q-card-section>
         <q-card-section>
           <q-form ref="addonFormRef" class="q-gutter-md">
-            <q-input v-model="addonForm.name" label="Add-On Name" outlined dense :rules="[(v)=>!!v || 'Required']" />
-            <q-select v-model="addonForm.category" :options="addonCategoryOptions" label="Category" outlined dense emit-value :rules="[(v)=>!!v || 'Required']" />
-            <q-input v-model.number="addonForm.price" label="Price" type="number" outlined dense :rules="[(v)=>v!==null && v!=='' || 'Required', (v)=>v>=0 || 'Cannot be negative']" />
-            <q-input v-model.number="addonForm.stock" label="Stock (optional)" type="number" outlined dense />
-            <q-select v-model="addonForm.status" :options="statusOptions" label="Status" outlined dense emit-value :rules="[(v)=>!!v || 'Required']" />
+            <q-input
+              v-model="addonForm.name"
+              label="Add-On Name"
+              outlined
+              dense
+              :rules="[(v) => !!v || 'Required']"
+            />
+            <q-select
+              v-model="addonForm.category"
+              :options="addonCategoryOptions"
+              label="Category"
+              outlined
+              dense
+              emit-value
+              :rules="[(v) => !!v || 'Required']"
+            />
+            <q-input
+              v-model.number="addonForm.price"
+              label="Price"
+              type="number"
+              outlined
+              dense
+              :rules="[
+                (v) => (v !== null && v !== '') || 'Required',
+                (v) => v >= 0 || 'Cannot be negative',
+              ]"
+            />
+            <q-input
+              v-model.number="addonForm.stock"
+              label="Stock (optional)"
+              type="number"
+              outlined
+              dense
+            />
+            <q-select
+              v-model="addonForm.status"
+              :options="statusOptions"
+              label="Status"
+              outlined
+              dense
+              emit-value
+              :rules="[(v) => !!v || 'Required']"
+            />
+            <q-select
+              v-model="addonForm.allowedProductIds"
+              :options="productOptions"
+              label="Allowed Products"
+              outlined
+              dense
+              multiple
+              emit-value
+              map-options
+            />
           </q-form>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="closeAddonDialog" />
-          <q-btn flat label="Save" color="primary" @click="submitAddon" :loading="addonStore.loading" />
+          <q-btn
+            flat
+            label="Save"
+            color="primary"
+            @click="submitAddon"
+            :loading="addonStore.loading"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -400,6 +549,8 @@ const searchQuery = ref('')
 const selectedCategory = ref('All')
 const selectedStock = ref('All')
 const selectedInventoryTab = ref('products')
+const selectedProductView = ref('catalog')
+const placeholderImage = 'https://via.placeholder.com/300?text=No+Image'
 const showAddProductDialog = ref(false)
 const editingProduct = ref(null)
 const showAddCategoryDialog = ref(false)
@@ -416,7 +567,7 @@ const productForm = reactive({
   productCost: 0,
   productStock: 0,
   productCategory: '',
-  productImage: ''
+  productImage: '',
 })
 
 const categoryForm = reactive({ name: '', description: '' })
@@ -425,7 +576,8 @@ const addonForm = reactive({
   category: '',
   price: 0,
   stock: null,
-  status: 'Available'
+  status: 'Available',
+  allowedProductIds: [],
 })
 const productImageFile = ref(null)
 const productImagePreview = ref('')
@@ -473,7 +625,14 @@ const columns = [
 const addonColumns = [
   { name: 'name', label: 'Add-On Name', field: 'name', align: 'left', sortable: true },
   { name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true },
-  { name: 'price', label: 'Price', field: 'price', align: 'right', sortable: true, format: (v)=>`$${Number(v||0).toFixed(2)}` },
+  {
+    name: 'price',
+    label: 'Price',
+    field: 'price',
+    align: 'right',
+    sortable: true,
+    format: (v) => `$${Number(v || 0).toFixed(2)}`,
+  },
   { name: 'stock', label: 'Stock', field: 'stock', align: 'center', sortable: true },
   { name: 'status', label: 'Status', field: 'status', align: 'center', sortable: true },
   { name: 'actions', label: 'Actions', field: 'actions', align: 'center' },
@@ -493,6 +652,9 @@ const categoriesForForm = computed(() => (categoryStore.categories || []).map((c
 const stockOptions = ['All', 'Out of Stock', 'Low', 'Medium', 'High']
 const addonCategoryOptions = ['Toppings', 'Extras']
 const statusOptions = ['Available', 'Unavailable']
+const productOptions = computed(() =>
+  (productStore.products || []).map((p) => ({ label: p.productName, value: p.id })),
+)
 const selectedAddonAvailability = ref('All')
 const selectedAddonCategory = ref('All')
 const addonAvailabilityOptions = ['All', 'Available', 'Unavailable']
@@ -501,7 +663,7 @@ const showExportDialog = ref(false)
 const exportFormat = ref('csv')
 const formatOptions = [
   { label: 'CSV', value: 'csv' },
-  { label: 'PDF', value: 'pdf' }
+  { label: 'PDF', value: 'pdf' },
 ]
 const exportUseTableFilters = ref(true)
 const exportCategory = ref('All')
@@ -534,17 +696,18 @@ const filteredProducts = computed(() => {
 const filteredAddons = computed(() => {
   let list = addonStore.addons || []
   if (selectedAddonAvailability.value !== 'All') {
-    list = list.filter(a => a.status === selectedAddonAvailability.value)
+    list = list.filter((a) => a.status === selectedAddonAvailability.value)
   }
   if (selectedAddonCategory.value !== 'All') {
-    list = list.filter(a => a.category === selectedAddonCategory.value)
+    list = list.filter((a) => a.category === selectedAddonCategory.value)
   }
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
-    list = list.filter(a =>
-      (a.name && a.name.toLowerCase().includes(q)) ||
-      (a.category && a.category.toLowerCase().includes(q)) ||
-      (a.status && a.status.toLowerCase().includes(q))
+    list = list.filter(
+      (a) =>
+        (a.name && a.name.toLowerCase().includes(q)) ||
+        (a.category && a.category.toLowerCase().includes(q)) ||
+        (a.status && a.status.toLowerCase().includes(q)),
     )
   }
   return list
@@ -558,7 +721,7 @@ const openEditDialog = (product) => {
     productCost: product.productCost,
     productStock: product.productStock,
     productCategory: product.productCategory,
-    productImage: product.productImage || ''
+    productImage: product.productImage || '',
   })
   showAddProductDialog.value = true
 }
@@ -570,7 +733,8 @@ const openEditAddonDialog = (addon) => {
     category: addon.category,
     price: addon.price,
     stock: addon.stock,
-    status: addon.status
+    status: addon.status,
+    allowedProductIds: Array.isArray(addon.allowedProductIds) ? [...addon.allowedProductIds] : [],
   })
   showAddAddonDialog.value = true
 }
@@ -642,7 +806,7 @@ const confirmDeleteAddon = (addon) => {
     title: 'Delete Add-on',
     message: `Remove ${addon.name}?`,
     cancel: true,
-    persistent: true
+    persistent: true,
   }).onOk(async () => {
     try {
       await addonStore.deleteAddon(addon.id)
@@ -661,7 +825,8 @@ const closeAddonDialog = () => {
     category: '',
     price: 0,
     stock: null,
-    status: 'Available'
+    status: 'Available',
+    allowedProductIds: [],
   })
 }
 
@@ -691,7 +856,7 @@ const closeProductDialog = () => {
     productCost: 0,
     productStock: 0,
     productCategory: '',
-    productImage: ''
+    productImage: '',
   })
   clearImage()
 }
@@ -702,10 +867,10 @@ const getRowsForExport = () => {
   }
   let items = productStore.products || []
   if (exportCategory.value !== 'All') {
-    items = items.filter(p => p.productCategory === exportCategory.value)
+    items = items.filter((p) => p.productCategory === exportCategory.value)
   }
   if (exportStock.value !== 'All') {
-    items = items.filter(p => {
+    items = items.filter((p) => {
       const s = Number(p.productStock) || 0
       if (exportStock.value === 'Out of Stock') return s === 0
       if (exportStock.value === 'Low') return s > 0 && s < 10
@@ -724,24 +889,24 @@ const exportInventoryCSV = () => {
     return
   }
   const header = ['Product Name', 'Category', 'Price', 'Cost', 'Stock']
-  const dataLines = rows.map(p => [
+  const dataLines = rows.map((p) => [
     p.productName ?? '',
     p.productCategory ?? '',
     Number(p.productPrice ?? 0).toFixed(2),
     Number(p.productCost ?? 0).toFixed(2),
-    String(p.productStock ?? 0)
+    String(p.productStock ?? 0),
   ])
-  const escape = v => {
+  const escape = (v) => {
     const s = String(v).replace(/"/g, '""')
     if (/[",\n]/.test(s)) return `"${s}"`
     return s
   }
-  const csv = [header, ...dataLines].map(line => line.map(escape).join(',')).join('\n')
+  const csv = [header, ...dataLines].map((line) => line.map(escape).join(',')).join('\n')
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `inventory-${new Date().toISOString().slice(0,10)}.csv`
+  a.download = `inventory-${new Date().toISOString().slice(0, 10)}.csv`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
@@ -781,21 +946,29 @@ const exportInventoryPDF = () => {
             </tr>
           </thead>
           <tbody>
-            ${rows.map(p => `
+            ${rows
+              .map(
+                (p) => `
               <tr>
-                <td>${(p.productName ?? '').toString().replace(/</g,'&lt;')}</td>
-                <td>${(p.productCategory ?? '').toString().replace(/</g,'&lt;')}</td>
+                <td>${(p.productName ?? '').toString().replace(/</g, '&lt;')}</td>
+                <td>${(p.productCategory ?? '').toString().replace(/</g, '&lt;')}</td>
                 <td>${Number(p.productPrice ?? 0).toFixed(2)}</td>
                 <td>${Number(p.productCost ?? 0).toFixed(2)}</td>
                 <td>${String(p.productStock ?? 0)}</td>
-              </tr>`).join('')}
+              </tr>`,
+              )
+              .join('')}
           </tbody>
         </table>
       </body>
     </html>`
   const printWin = window.open('', '_blank')
   if (!printWin) {
-    $q.notify({ color: 'negative', message: 'Popup blocked. Allow popups to export PDF.', icon: 'report_problem' })
+    $q.notify({
+      color: 'negative',
+      message: 'Popup blocked. Allow popups to export PDF.',
+      icon: 'report_problem',
+    })
     return
   }
   printWin.document.write(html)
@@ -803,7 +976,11 @@ const exportInventoryPDF = () => {
   printWin.focus()
   printWin.print()
   printWin.close()
-  $q.notify({ color: 'positive', message: `Prepared PDF for ${rows.length} products`, icon: 'download' })
+  $q.notify({
+    color: 'positive',
+    message: `Prepared PDF for ${rows.length} products`,
+    icon: 'download',
+  })
 }
 
 const executeExport = () => {
@@ -857,3 +1034,14 @@ const closeCategoryDialog = () => {
   Object.assign(categoryForm, { name: '', description: '' })
 }
 </script>
+<style scoped>
+.catalog-card .q-card__section {
+  padding: 8px;
+}
+.catalog-card .q-card__actions {
+  padding: 8px;
+}
+.catalog-card .text-weight-bold {
+  font-size: 13px;
+}
+</style>
